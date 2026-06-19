@@ -1,0 +1,7 @@
+interface:
+  display_name: "Agents Init"
+  short_description: "Init/adopt projects for agent workflows."
+  default_prompt: "Use $agents-init to initialize or adopt this project with my reusable agent workflow."
+
+policy:
+  allow_implicit_invocation: true

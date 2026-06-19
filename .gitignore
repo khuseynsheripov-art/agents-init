@@ -1,0 +1,18 @@
+# Local workflow runtime state
+.workflow/
+.tmp/
+
+# Local Maestro knowledge/runtime state
+maestro-knowledge-base/
+
+# OS/editor/cache
+Thumbs.db
+.DS_Store
+*.tmp
+*.log
+
+# Private or project-specific scratch artifacts
+*.heapsnapshot
+*.network-request
+*.network-response
+
