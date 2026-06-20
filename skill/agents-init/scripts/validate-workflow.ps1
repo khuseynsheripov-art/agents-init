@@ -34,6 +34,18 @@ function Test-SuspiciousYamlDoubleQuote {
   return $Text -match '(?m):\s*"[^"\r\n]*""'
 }
 
+function Test-LikelyMojibake {
+  param([string]$Text)
+  if (-not $Text) { return $false }
+  $codes = @(0x951F, 0xFFFD, 0x6D93, 0x9438, 0x93C2, 0x9359, 0x9366, 0x93C8, 0x941E, 0x704F, 0x95C7, 0x951B, 0x93C0, 0x7035, 0x95AB, 0x6F36, 0x59AB, 0x6D60, 0x6F7F, 0x9286, 0x942A, 0x93AC, 0x95C4)
+  foreach ($code in $codes) {
+    if ($Text.IndexOf([char]$code) -ge 0) {
+      return $true
+    }
+  }
+  return $false
+}
+
 function Remove-NegativeEvidenceBlocks {
   param([string]$Text)
   if (-not $Text) {
@@ -191,6 +203,12 @@ if ($modelPolicy -and ($modelPolicy -notmatch 'default_model_alias:\s*opus' -or 
 }
 if ($modelPolicy -and (Test-SuspiciousYamlDoubleQuote $modelPolicy)) {
   Add-Issue -Level 'error' -Message 'model_policy.yaml appears to contain YAML-invalid doubled quotes inside a double-quoted scalar; use backslash-escaped quotes or single quotes.' -File '.workflow/model_policy.yaml'
+}
+if ($modelPolicy -and (Test-LikelyMojibake $modelPolicy)) {
+  Add-Issue -Level 'error' -Message 'model_policy.yaml appears to contain mojibake or corrupted non-ASCII text; replace the route policy block from the current template.' -File '.workflow/model_policy.yaml'
+}
+if ($modelPolicy -and $modelPolicy -match 'claude-opus-4\.7|4\.7-thinking|--model claude-opus-|claude\.exe') {
+  Add-Issue -Level 'error' -Message 'model_policy.yaml contains stale/non-portable Claude route or concrete model text; use discovered commands and model alias opus/sonnet.' -File '.workflow/model_policy.yaml'
 }
 if ($modelPolicy -and ($modelPolicy -notmatch '(?m)^\s*route_discovery:\s*$' -or $modelPolicy -notmatch '(?m)^\s*profile_policy:\s*$')) {
   Add-Issue -Level 'warning' -Message 'model_policy.yaml should include route_discovery and profile_policy so Claude/cc2/Maestro routes are discovered and smoke-tested instead of hardcoded.' -File '.workflow/model_policy.yaml'

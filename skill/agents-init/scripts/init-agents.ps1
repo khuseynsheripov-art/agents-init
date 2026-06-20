@@ -143,6 +143,94 @@ function Update-FileIfChanged {
   return $false
 }
 
+function Test-LikelyMojibake {
+  param([string]$Text)
+  if (-not $Text) { return $false }
+  $codes = @(0x951F, 0xFFFD, 0x6D93, 0x9438, 0x93C2, 0x9359, 0x9366, 0x93C8, 0x941E, 0x704F, 0x95C7, 0x951B, 0x93C0, 0x7035, 0x95AB, 0x6F36, 0x59AB, 0x6D60, 0x6F7F, 0x9286, 0x942A, 0x93AC, 0x95C4)
+  foreach ($code in $codes) {
+    if ($Text.IndexOf([char]$code) -ge 0) {
+      return $true
+    }
+  }
+  return $false
+}
+
+function Test-SuspiciousYamlDoubleQuote {
+  param([string]$Text)
+  if (-not $Text) {
+    return $false
+  }
+  return $Text -match '(?m):\s*"[^"\r\n]*""'
+}
+
+function Get-DefaultModelPolicyText {
+  return @'
+updated_at: "<update-on-use>"
+
+claude_review:
+  default_model_alias: opus
+  cheap_model_alias: sonnet
+  default_execution_mode: capturable_cli_one_shot
+  preferred_route: auto_discover_then_user_confirm
+  fallback_route: capturable_cli_one_shot
+  continuous_allowed: true
+  max_review_turns_default: 2
+  resume_policy: "Resume only when the next question depends on Claude's prior answer or role memory."
+  close_policy: "Retire after receipt ingest, gate change, direction change, or quota concern."
+  command_template_one_shot: "<claude_command> --safe-mode -p <packet> --model opus --output-format json --no-session-persistence"
+  command_template_resume: "<claude_command> --safe-mode -p <follow-up> --model opus --output-format json --resume <session_id>"
+
+route_discovery:
+  candidate_commands:
+    - cc2
+    - claude
+  detect_command:
+    - "Get-Command cc2 -ErrorAction SilentlyContinue"
+    - "Get-Command claude -ErrorAction SilentlyContinue"
+  smoke_required_before_use: true
+  smoke_command_template: "<candidate> --safe-mode -p \"agents-init Claude smoke. Reply with AGENTSINIT-CLAUDE-SMOKE.\" --model opus --output-format json --no-session-persistence"
+  maestro_delegate_smoke_template: "maestro delegate --to claude --mode analysis --cd <project> \"Smoke test. Reply with AGENTSINIT-MAESTRO-CLAUDE-SMOKE.\""
+  selection_policy:
+    - "Prefer a project-approved wrapper such as cc2 when it smokes successfully."
+    - "Use default claude only when it smokes successfully for the active profile."
+    - "Use Maestro delegate only when raw output contains a task-relevant smoke token."
+    - "If multiple candidates work, ask the user which profile/route should be project default."
+    - "If no candidate works, mark Claude review blocked and continue with local multi-perspective analysis."
+
+profile_policy:
+  profile_label: ""
+  env_var_name: CLAUDE_CONFIG_DIR
+  env_value: ""
+  allow_auto_profile_switch: false
+  account_or_profile_switch_requires_user_confirmation: true
+  do_not_store_secrets: true
+  write_scope_default: project
+
+overrides:
+  no_claude_phrases:
+    - "no Claude"
+    - "Codex only"
+    - "Chinese: do not use Claude"
+  cheap_phrases:
+    - "save quota"
+    - "cheap Claude"
+    - "sonnet"
+    - "Chinese: save quota"
+  opus_phrases:
+    - "opus"
+    - "4.8"
+    - "important plan debate"
+    - "Chinese: important plan debate"
+
+must_record:
+  - requested_model_alias
+  - actual_model_reported_by_tool
+  - execution_mode
+  - session_id_if_resumed
+  - why_resume_was_needed
+'@
+}
+
 function Upgrade-AgentsInitV2 {
   param(
     [Parameter(Mandatory = $true)][string]$Project,
@@ -374,6 +462,9 @@ actual_model_expected_from_tool: true
   $modelPolicyPath = Join-Path $Project '.workflow\model_policy.yaml'
   if (Test-Path -LiteralPath $modelPolicyPath -PathType Leaf) {
     $text = Get-Content -Raw -Encoding UTF8 -LiteralPath $modelPolicyPath
+    if ((Test-LikelyMojibake $text) -or (Test-SuspiciousYamlDoubleQuote $text)) {
+      $text = Get-DefaultModelPolicyText
+    }
     if ($text -notmatch '(?m)^\s*preferred_route:\s*') {
       $text = [regex]::Replace($text, '(?m)^(\s*default_execution_mode:\s*.*\r?\n)', "`$1  preferred_route: auto_discover_then_user_confirm`r`n  fallback_route: capturable_cli_one_shot`r`n", 1)
     }

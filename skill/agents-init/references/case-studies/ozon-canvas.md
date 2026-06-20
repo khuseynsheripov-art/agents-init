@@ -11,11 +11,14 @@ The user expected the work to examine how an Ozon image-set workflow would fit i
 The failure was not just ambiguity or a missing keyword. The main agent should have recovered anchors, synthesized the prior intended mainline against the current artifact, and asked the upstream contradiction first.
 
 ```text
+Required first diagnosis:
+- /image mainline integration vs /canvas/ozon-suite sidecar drift
+
 Recovered mainline:
-- plugin/source package -> existing Canvas image workflow -> suite/manifest/export path
+- plugin/source package -> existing Canvas /image capability -> suite/manifest/export path
 
 Current observed artifact:
-- temporary sidecar/workbench route
+- /canvas/ozon-suite temporary sidecar/workbench route
 
 Contradiction:
 - the visible slice may prove workflow readability, but it does not prove existing-surface integration or user acceptance of the new route
@@ -23,6 +26,8 @@ Contradiction:
 First confirmation:
 - "Are you saying we should return to the existing Canvas insertion plan before continuing the sidecar?"
 ```
+
+Do not start by asking about color, size, exported shape folders, model versions, or workflow upgrade state when the user's actual correction is that the audit/insertion mainline detached from the visible route. Those downstream details can be asked only after the mainline-vs-sidecar diagnosis is stated.
 
 ## Consequence Disclosure
 

@@ -85,6 +85,7 @@ $patterns = [ordered]@{
   maestro = @('maestro', 'ralph', 'delegate')
   multimodel = @('claude', 'cc2', 'second view', 'second-view', 'multi-model', 'multimodel', 'other model', 'model review', '\u591a\u5927\u6a21\u578b', '\u7b2c\u4e8c\u5927\u6a21\u578b', '\u53cd\u9a73', '\u8ba9\s*claude', '\u627e\s*claude')
   model_config = @('configure.*claude', 'claude.*configure', 'config.*claude', 'claude.*config', 'multiple claude', 'multiple.*account', 'account.*claude', 'profile', 'model names.*change', 'role mapping', 'cli-tools\.json', 'CLAUDE_CONFIG_DIR', '\u914d\u7f6e.*claude', 'claude.*\u914d\u7f6e', '\u591a.*claude', '\u591a.*\u8d26\u53f7', '\u8d26\u53f7', '\u8fc7\u671f', '\u5c01\u53f7')
+  model_failure = @('404', 'model.*not.*found', 'model.*unavailable', 'model.*inaccessible', 'opus.*fail', 'claude-opus-4\.7', '4\.7-thinking', 'claude\.exe', 'cc2.*works', 'default claude', 'wrong model', 'model.*wrong')
   opus = @('\bopus\b', '\b4\.8\b', 'claude.*opus', 'important plan debate')
   sonnet = @('\bsonnet\b', 'save quota', 'cheap claude', '\u7701\u989d\u5ea6')
   no_claude = @('no claude', 'codex only', '\u4e0d\u8981\s*claude')
@@ -197,17 +198,17 @@ if (Test-AnyPattern $lower $patterns['menu']) {
     -ReadFirst ($readCore + @('.workflow/model_policy.yaml')) `
     -Templates @('.workflow/templates/orchestration_decision.yaml') `
     -MustNot @('Do not call cc2.', 'Do not claim a multi-model review happened.')
-} elseif ((Test-AnyPattern $lower $patterns['model_config']) -and -not (Test-AnyPattern $lower $patterns['no_claude'])) {
+} elseif (((Test-AnyPattern $lower $patterns['model_config']) -or (Test-AnyPattern $lower $patterns['model_failure'])) -and -not (Test-AnyPattern $lower $patterns['no_claude'])) {
   $route = New-Route `
     -Name 'multi-model-config-gate' `
-    -Action 'Inspect Maestro and Claude routing configuration, explain Maestro delegate vs cc2, require user confirmation for profile/global writes, and prove raw output with smoke before claiming integration.' `
+    -Action 'Inspect Maestro and Claude routing configuration, distinguish cc2 wrapper from default claude and Maestro delegate, report the exact failing route/model, and prove raw output with smoke before claiming integration.' `
     -Gate 'multi_model_configuration_policy' `
     -Confidence 'high' `
-    -Reason 'Prompt asks about configuring Claude, multiple accounts/profiles, model drift, role mapping, or durable multi-model routing.' `
+    -Reason 'Prompt asks about configuring Claude, multiple accounts/profiles, model drift, route failure, 404, role mapping, or durable multi-model routing.' `
     -ReadFirst ($readCore + @('.workflow/model_policy.yaml', 'references/maestro-routing.md', 'references/multi-model-shared-context.md', 'references/multi-model-role-policy.md')) `
     -Templates @('.workflow/templates/orchestration_decision.yaml', '.workflow/templates/delegate_receipt.yaml', '.workflow/templates/model_review_receipt.yaml') `
     -Commands @('maestro config delegate show --json', 'powershell -NoProfile -ExecutionPolicy Bypass -File <skill>\scripts\doctor-agents.ps1 -ProjectPath <project> -Json') `
-    -MustNot @('Do not silently edit global config.', 'Do not switch Claude profiles without explicit user confirmation.', 'Do not hardcode dated concrete model names unless the local tool requires it.', 'Do not claim role routing uses Claude when roles still map to Codex.', 'Do not trust Maestro completed metadata without raw task-relevant output.')
+    -MustNot @('Do not silently edit global config.', 'Do not switch Claude profiles without explicit user confirmation.', 'Do not hardcode dated concrete model names unless the local tool requires it.', 'Do not claim role routing uses Claude when roles still map to Codex.', 'Do not trust Maestro completed metadata without raw task-relevant output.', 'Do not treat default claude or Maestro failure as cc2 failure.')
 } elseif ((Test-AnyPattern $lower $patterns['multimodel']) -and -not (Test-AnyPattern $lower $patterns['no_claude'])) {
   $modelAlias = if (Test-AnyPattern $lower $patterns['sonnet']) { 'sonnet' } else { 'opus' }
   $executionMode = if (Test-AnyPattern $lower $patterns['continuous_model']) { 'capturable_cli_continuous' } else { 'capturable_cli_one_shot' }
