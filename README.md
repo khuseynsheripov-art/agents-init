@@ -118,6 +118,26 @@ cd agents-init
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\update-from-git.ps1
 ```
 
+From any project after the skill is already installed, the installed skill can update itself from GitHub into a local source clone and reinstall:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File "$env:USERPROFILE\.codex\skills\agents-init\scripts\update-agents-init.ps1"
+```
+
+To update the skill and then non-destructively upgrade one project workflow:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File "$env:USERPROFILE\.codex\skills\agents-init\scripts\update-agents-init.ps1" -ProjectPath "<project>"
+```
+
+Default source clone:
+
+```text
+%USERPROFILE%\.codex\skill-sources\agents-init
+```
+
+This pulls `origin/main`, reinstalls `%USERPROFILE%\.codex\skills\agents-init`, then runs `init-agents.ps1 -Mode upgrade` plus `validate-workflow.ps1` only when `-ProjectPath` is supplied.
+
 ## Project Adoption
 
 After the skill is installed, a project can be adopted non-destructively:

@@ -377,6 +377,16 @@ actual_model_expected_from_tool: true
     if ($text -notmatch '(?m)^\s*preferred_route:\s*') {
       $text = [regex]::Replace($text, '(?m)^(\s*default_execution_mode:\s*.*\r?\n)', "`$1  preferred_route: auto_discover_then_user_confirm`r`n  fallback_route: capturable_cli_one_shot`r`n", 1)
     }
+    $text = [regex]::Replace(
+      $text,
+      '(?m)^\s*smoke_command_template:\s*.*$',
+      '  smoke_command_template: "<candidate> --safe-mode -p \"agents-init Claude smoke. Reply with AGENTSINIT-CLAUDE-SMOKE.\" --model opus --output-format json --no-session-persistence"'
+    )
+    $text = [regex]::Replace(
+      $text,
+      '(?m)^\s*maestro_delegate_smoke_template:\s*.*$',
+      '  maestro_delegate_smoke_template: "maestro delegate --to claude --mode analysis --cd <project> \"Smoke test. Reply with AGENTSINIT-MAESTRO-CLAUDE-SMOKE.\""'
+    )
     if ($text -notmatch '(?m)^\s*route_discovery:\s*$') {
       $block = @"
 route_discovery:
@@ -387,8 +397,8 @@ route_discovery:
     - "Get-Command cc2 -ErrorAction SilentlyContinue"
     - "Get-Command claude -ErrorAction SilentlyContinue"
   smoke_required_before_use: true
-  smoke_command_template: "<candidate> --safe-mode -p ""agents-init Claude smoke. Reply with AGENTSINIT-CLAUDE-SMOKE."" --model opus --output-format json --no-session-persistence"
-  maestro_delegate_smoke_template: "maestro delegate --to claude --mode analysis --cd <project> ""Smoke test. Reply with AGENTSINIT-MAESTRO-CLAUDE-SMOKE."""
+  smoke_command_template: "<candidate> --safe-mode -p \`"agents-init Claude smoke. Reply with AGENTSINIT-CLAUDE-SMOKE.\`" --model opus --output-format json --no-session-persistence"
+  maestro_delegate_smoke_template: "maestro delegate --to claude --mode analysis --cd <project> \`"Smoke test. Reply with AGENTSINIT-MAESTRO-CLAUDE-SMOKE.\`""
   selection_policy:
     - "Prefer a project-approved wrapper such as cc2 when it smokes successfully."
     - "Use default claude only when it smokes successfully for the active profile."
@@ -481,6 +491,7 @@ if ($Mode -eq 'menu') {
       '$agents-init ingest-receipt',
       '$agents-init route-maestro',
       '$agents-init route-intent',
+      '$agents-init self-update',
       '$agents-init save-state'
     )
     script_examples = @(
@@ -491,6 +502,7 @@ if ($Mode -eq 'menu') {
       'powershell -NoProfile -ExecutionPolicy Bypass -File <skill>\scripts\init-agents.ps1 -ProjectPath <project> -Mode pressure-test',
       'powershell -NoProfile -ExecutionPolicy Bypass -File <skill>\scripts\init-agents.ps1 -ProjectPath <project> -Mode orchestrate -Prompt "the direction feels off"',
       'powershell -NoProfile -ExecutionPolicy Bypass -File <skill>\scripts\init-agents.ps1 -ProjectPath <project> -Mode route-intent -Prompt "I am fuzzy; help clarify"',
+      'powershell -NoProfile -ExecutionPolicy Bypass -File <skill>\scripts\update-agents-init.ps1 -ProjectPath <project>',
       'powershell -NoProfile -ExecutionPolicy Bypass -File <skill>\scripts\init-agents.ps1 -ProjectPath <project> -Mode dispatch-worker -TaskId T3 -Task "analyze old branch" -Scope "read-only docs"',
       'powershell -NoProfile -ExecutionPolicy Bypass -File <skill>\scripts\init-agents.ps1 -ProjectPath <project> -Mode ingest-receipt -ReceiptPath <receipt.yaml>',
       'powershell -NoProfile -ExecutionPolicy Bypass -File <skill>\scripts\init-agents.ps1 -ProjectPath <project> -Mode save-state',

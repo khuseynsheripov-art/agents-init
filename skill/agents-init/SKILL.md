@@ -104,6 +104,7 @@ These are reference actions for the main agent. Do not present them as the prima
 | `$agents-init multi-model-packet` | Build a shared context packet for Claude/Codex/Maestro/Codex App review. |
 | `$agents-init save-state` | Update recovery state before compression or handoff. |
 | `$agents-init maintain-knowledge` | Main agent updates, closes, promotes, indexes, or archives workflow knowledge instead of appending forever. |
+| `$agents-init self-update` | Pull the latest agents-init source from GitHub, install the skill, then optionally upgrade the current project's `.workflow`. |
 
 Natural language should route to the same actions. Examples:
 
@@ -119,6 +120,16 @@ Natural language should route to the same actions. Examples:
 `orchestrate` is the real decision loop. `route-intent` is advisory only. If multiple signals appear, use the first recommended route as the next gate but preserve all matched signals in open threads. For example, "UI 不满意 + 开子会话 + 分析爆品样本" normally starts with UI/sample acceptance clarification, then dispatches bounded workers.
 
 Treat `route-intent.ps1` as weak-signal output, not semantic understanding. When user wording refers to previous work, current browser pages, old audits, ports, samples, or repeated corrections, bounded context retrieval and evidence citation outrank the route-intent recommendation.
+
+## Self Update
+
+When the user asks to upgrade or update agents-init itself, update the installed skill from the GitHub distribution repo first, then upgrade the named project workflow only if requested:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File "$env:USERPROFILE\.codex\skills\agents-init\scripts\update-agents-init.ps1" -ProjectPath "<project>"
+```
+
+This uses a local source clone at `%USERPROFILE%\.codex\skill-sources\agents-init` by default. It does not decide product direction and does not make the project live-proven. After self-update, still run `recover`, `validate`, and the semantic orchestration loop for the user's actual request.
 
 ## Main Agent Duties
 

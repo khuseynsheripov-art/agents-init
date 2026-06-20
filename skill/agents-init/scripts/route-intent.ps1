@@ -74,6 +74,7 @@ $readCore = @(
 $lower = $Prompt.ToLowerInvariant()
 
 $patterns = [ordered]@{
+  self_update = @('agents-init.*(self-update|update|upgrade)', '(self-update|update|upgrade).*agents-init', 'update.*skill', 'upgrade.*skill', 'skill.*\u66f4\u65b0', 'skill.*\u5347\u7ea7', 'skill.*\u65b0\u7248\u672c', 'pull.*latest.*agents-init', '\u66f4\u65b0.*agents-init', '\u5347\u7ea7.*agents-init', 'agents-init.*\u66f4\u65b0', 'agents-init.*\u5347\u7ea7')
   save = @('save-state', 'handoff', 'new session', 'compression', '\u538b\u7f29', '\u4ea4\u63a5', '\u65b0\u4f1a\u8bdd', '\u4fdd\u5b58\u72b6\u6001')
   recover = @('recover', 'where are we', 'current state', 'lost context', '\u6062\u590d', '\u73b0\u5728\u5230\u54ea', '\u5230\u54ea\u4e86', '\u4e0d\u8bb0\u5f97')
   ui = @('\bui\b', '\bux\b', 'visual', 'frontend', 'screenshot', '\u754c\u9762', '\u89c6\u89c9', '\u4ea4\u4e92', '\u524d\u7aef', '\u4e0d\u6ee1\u610f', '\u4e0d\u597d\u770b', '\u770b\u4e0d\u5230')
@@ -100,7 +101,17 @@ foreach ($name in $patterns.Keys) {
   }
 }
 
-if ($hasWorkflow -and (Test-AnyPattern $lower $patterns['context_reference'])) {
+if (Test-AnyPattern $lower $patterns['self_update']) {
+  $route = New-Route `
+    -Name 'self-update -> optional project upgrade' `
+    -Action 'Pull latest agents-init from GitHub, reinstall the local skill, then upgrade and validate the named project workflow only when requested.' `
+    -Gate 'workflow_distribution_update' `
+    -Confidence 'high' `
+    -Reason 'Prompt asks to update or upgrade agents-init itself, not just the current project workflow.' `
+    -ReadFirst @('skill/agents-init/SKILL.md', 'README.md') `
+    -Commands @("powershell -NoProfile -ExecutionPolicy Bypass -File `"$env:USERPROFILE\.codex\skills\agents-init\scripts\update-agents-init.ps1`" -ProjectPath `"$project`"") `
+    -MustNot @('Do not treat self-update as product semantic proof.', 'Do not ask v1/v2 as the first user-facing product question.', 'Do not upgrade business workflow files unless the project path is explicit or current project is clearly intended.')
+} elseif ($hasWorkflow -and (Test-AnyPattern $lower $patterns['context_reference'])) {
   $contextTemplates = @('.workflow/templates/orchestration_decision.yaml', '.workflow/templates/multi_perspective_review.yaml', '.workflow/memory_points.yaml')
   if (Test-AnyPattern $lower $patterns['multimodel']) {
     $contextTemplates += @('.workflow/templates/multi_model_context_packet.md', '.workflow/templates/model_review_receipt.yaml')

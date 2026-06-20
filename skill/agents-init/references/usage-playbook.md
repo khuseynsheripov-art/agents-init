@@ -71,6 +71,16 @@ recover mainline -> diagnose drift -> disclose consequence -> ask the smallest u
 
 The command menu, templates, Maestro surfaces, and Claude modes are support machinery. They should stay behind the main-agent loop unless the current gate actually needs them.
 
+## Self Update Pattern
+
+When the user asks to update or upgrade agents-init itself, do not stop at project `.workflow` upgrade. Pull the distribution repo and reinstall the skill first:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File "$env:USERPROFILE\.codex\skills\agents-init\scripts\update-agents-init.ps1" -ProjectPath "<project>"
+```
+
+This updates the installed skill from GitHub and then runs project workflow upgrade/validation only when `-ProjectPath` is provided. It is maintenance evidence, not proof that the user's product or semantic task is solved.
+
 ## Claude Budget Pattern
 
 Preferred when Maestro Claude is proven by current doctor/smoke:

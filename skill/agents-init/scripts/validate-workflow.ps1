@@ -26,6 +26,24 @@ function Test-NonEmptyField {
   return $Text -match "(?m)^\s*$([regex]::Escape($Field))\s*:\s*(?!\s*(null|$|`"`"|''|<))\S+"
 }
 
+function Test-SuspiciousYamlDoubleQuote {
+  param([string]$Text)
+  if (-not $Text) {
+    return $false
+  }
+  return $Text -match '(?m):\s*"[^"\r\n]*""'
+}
+
+function Remove-NegativeEvidenceBlocks {
+  param([string]$Text)
+  if (-not $Text) {
+    return ''
+  }
+  $withoutDoesNotProve = [regex]::Replace($Text, '(?ms)^\s*does_not_prove:\s*\r?\n(?:^\s+- .*\r?\n?)*', '')
+  $withoutRisks = [regex]::Replace($withoutDoesNotProve, '(?ms)^\s*risks:\s*\r?\n(?:^\s+- .*\r?\n?)*', '')
+  return [regex]::Replace($withoutRisks, '(?ms)^\s*next_verification:\s*\r?\n(?:^\s+- .*\r?\n?)*', '')
+}
+
 function Add-Issue {
   param(
     [Parameter(Mandatory = $true)][string]$Level,
@@ -171,6 +189,9 @@ if ($memoryPoints -and ($memoryPoints -notmatch 'memory_points:' -or $memoryPoin
 if ($modelPolicy -and ($modelPolicy -notmatch 'default_model_alias:\s*opus' -or $modelPolicy -notmatch 'cheap_model_alias:\s*sonnet')) {
   Add-Issue -Level 'warning' -Message 'model_policy.yaml should define opus as the default Claude review alias and sonnet as the quota-saving alias.' -File '.workflow/model_policy.yaml'
 }
+if ($modelPolicy -and (Test-SuspiciousYamlDoubleQuote $modelPolicy)) {
+  Add-Issue -Level 'error' -Message 'model_policy.yaml appears to contain YAML-invalid doubled quotes inside a double-quoted scalar; use backslash-escaped quotes or single quotes.' -File '.workflow/model_policy.yaml'
+}
 if ($modelPolicy -and ($modelPolicy -notmatch '(?m)^\s*route_discovery:\s*$' -or $modelPolicy -notmatch '(?m)^\s*profile_policy:\s*$')) {
   Add-Issue -Level 'warning' -Message 'model_policy.yaml should include route_discovery and profile_policy so Claude/cc2/Maestro routes are discovered and smoke-tested instead of hardcoded.' -File '.workflow/model_policy.yaml'
 }
@@ -182,6 +203,7 @@ if ($modelReviewReceipt -and ($modelReviewReceipt -notmatch 'requested_model_ali
 }
 
 $combined = "$task`n$verification"
+$positiveCombined = Remove-NegativeEvidenceBlocks $combined
 $claimsUiAccepted = $combined -match '(?i)(UI|UX)[^\r\n]*(status|accepted):\s*(accepted|done)|accepted[^\r\n]*(UI|UX)'
 $hasVisibleEvidence = $combined -match '(?i)screenshot|browser|visual|browser_or_visual_evidence'
 if ($claimsUiAccepted -and -not $hasVisibleEvidence) {
@@ -200,7 +222,7 @@ if ($claimsSampleAccepted -and -not $hasSampleGate) {
   Add-Issue -Level 'error' -Message 'Sample/source/seller-ready claim appears without sample decision or human-gate evidence.' -File '.workflow/verification.yaml'
 }
 
-$claimsExternalWrite = $combined -match '(?i)(published|exported|submitted|ordered|saved to platform|external write|seller-ready)'
+$claimsExternalWrite = $positiveCombined -match '(?i)(published|exported|submitted|ordered|saved to platform|external write|seller-ready)'
 $hasExplicitApproval = $combined -match '(?i)explicit approval|user_confirmation|human_gate[^\r\n]*(accepted|approved)|approved_by_user'
 if ($claimsExternalWrite -and -not $hasExplicitApproval) {
   Add-Issue -Level 'error' -Message 'External write/export/seller-ready claim appears without explicit approval evidence.' -File '.workflow/verification.yaml'
