@@ -1,5 +1,7 @@
 # Local workflow runtime state
 .workflow/
+!skill/agents-init/assets/project-template/.workflow/
+!skill/agents-init/assets/project-template/.workflow/**
 .tmp/
 
 # Local Maestro knowledge/runtime state
@@ -15,4 +17,3 @@ Thumbs.db
 *.heapsnapshot
 *.network-request
 *.network-response
-

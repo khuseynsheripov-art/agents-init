@@ -1,0 +1,63 @@
+updated_at: "<update-on-use>"
+
+claude_review:
+  default_model_alias: opus
+  cheap_model_alias: sonnet
+  default_execution_mode: capturable_cli_one_shot
+  preferred_route: auto_discover_then_user_confirm
+  fallback_route: capturable_cli_one_shot
+  continuous_allowed: true
+  max_review_turns_default: 2
+  resume_policy: "Resume only when the next question depends on Claude's prior answer or role memory."
+  close_policy: "Retire after receipt ingest, gate change, direction change, or quota concern."
+  command_template_one_shot: "<claude_command> --safe-mode -p <packet> --model opus --output-format json --no-session-persistence"
+  command_template_resume: "<claude_command> --safe-mode -p <follow-up> --model opus --output-format json --resume <session_id>"
+
+route_discovery:
+  candidate_commands:
+    - cc2
+    - claude
+  detect_command:
+    - "Get-Command cc2 -ErrorAction SilentlyContinue"
+    - "Get-Command claude -ErrorAction SilentlyContinue"
+  smoke_required_before_use: true
+  smoke_command_template: "<candidate> --safe-mode -p \"agents-init Claude smoke. Reply with AGENTSINIT-CLAUDE-SMOKE.\" --model opus --output-format json --no-session-persistence"
+  maestro_delegate_smoke_template: "maestro delegate --to claude --mode analysis --cd <project> \"Smoke test. Reply with AGENTSINIT-MAESTRO-CLAUDE-SMOKE.\""
+  selection_policy:
+    - "Prefer a project-approved wrapper such as cc2 when it smokes successfully."
+    - "Use default claude only when it smokes successfully for the active profile."
+    - "Use Maestro delegate only when raw output contains a task-relevant smoke token."
+    - "If multiple candidates work, ask the user which profile/route should be project default."
+    - "If no candidate works, mark Claude review blocked and continue with local multi-perspective analysis."
+
+profile_policy:
+  profile_label: ""
+  env_var_name: CLAUDE_CONFIG_DIR
+  env_value: ""
+  allow_auto_profile_switch: false
+  account_or_profile_switch_requires_user_confirmation: true
+  do_not_store_secrets: true
+  write_scope_default: project
+
+overrides:
+  no_claude_phrases:
+    - "no Claude"
+    - "Codex only"
+    - "不要 Claude"
+  cheap_phrases:
+    - "save quota"
+    - "cheap Claude"
+    - "sonnet"
+    - "省额度"
+  opus_phrases:
+    - "opus"
+    - "4.8"
+    - "important plan debate"
+    - "重要方案"
+
+must_record:
+  - requested_model_alias
+  - actual_model_reported_by_tool
+  - execution_mode
+  - session_id_if_resumed
+  - why_resume_was_needed
