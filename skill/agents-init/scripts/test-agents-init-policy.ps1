@@ -48,7 +48,7 @@ $mojibakePattern = New-CharClass @(
 )
 $badFiles = @()
 foreach ($file in $skillFiles) {
-  if ($file.FullName -eq $PSCommandPath) {
+  if ($file.FullName -eq $PSCommandPath -or $file.Name -eq 'test-agents-init-policy.ps1') {
     continue
   }
   if ($file.Name -eq 'validate-workflow.ps1') {
@@ -64,7 +64,7 @@ Assert-True ($badFiles.Count -eq 0) ("Skill contains likely mojibake: " + ($badF
 $badModelPattern = 'claude-opus-4\.7|4\.7-thinking|--model claude-opus-|claude\.exe'
 $badModelFiles = @()
 foreach ($file in $skillFiles) {
-  if ($file.FullName -eq $PSCommandPath) {
+  if ($file.FullName -eq $PSCommandPath -or $file.Name -eq 'test-agents-init-policy.ps1') {
     continue
   }
   if ($file.Name -eq 'validate-workflow.ps1') {
@@ -85,7 +85,12 @@ $multiModelReference = Read-Text (Join-Path $skillRoot 'references\multi-model-s
 Assert-True ($multiModelReference -match 'Prefer `maestro_delegate` for Claude' -and $multiModelReference -match 'cc2` is the local Claude profile/alias reference and fallback') 'Multi-model policy must prefer Maestro delegate raw-output lifecycle and treat cc2 as profile/alias fallback, not default context dumping.'
 
 $routeIntent = Read-Text (Join-Path $skillRoot 'scripts\route-intent.ps1')
-Assert-True ($routeIntent -match 'prefer proven Maestro delegate' -and $routeIntent -match 'maestro delegate --to claude' -and $routeIntent -notmatch 'Commands @\("cc2 --safe-mode -p <compact-packet>') 'Claude intent routing must recommend bounded Maestro delegate first, not a direct cc2-only command.'
+Assert-True ($routeIntent -match 'prefer proven Maestro delegate' -and $routeIntent -match 'invoke-claude-review.ps1' -and $routeIntent -notmatch 'Commands @\("cc2 --safe-mode -p <compact-packet>') 'Claude intent routing must recommend the agents-init Claude invocation wrapper, not a direct cc2-only command.'
+
+$invokeClaude = Join-Path $skillRoot 'scripts\invoke-claude-review.ps1'
+Assert-True (Test-Path -LiteralPath $invokeClaude -PathType Leaf) 'agents-init must include invoke-claude-review.ps1 so other sessions can actually call Claude and read raw output.'
+$invokeClaudeText = Read-Text $invokeClaude
+Assert-True ($invokeClaudeText -match 'maestro delegate output' -and $invokeClaudeText -match 'raw_output_non_empty' -and $invokeClaudeText -match 'exec_id') 'invoke-claude-review.ps1 must call Maestro delegate, read delegate output, and report exec_id/raw_output_non_empty.'
 
 $modelPolicyTemplate = Read-Text (Join-Path $skillRoot 'assets\project-template\.workflow\model_policy.yaml')
 Assert-True ($modelPolicyTemplate -match 'preferred_route: maestro_delegate_when_raw_output_proven' -and $modelPolicyTemplate -match 'cc2_profile_reference') 'model_policy template must encode Maestro delegate as preferred proven lifecycle and cc2 as a local profile reference/fallback.'

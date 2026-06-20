@@ -122,6 +122,7 @@ These are reference actions for the main agent. Do not present them as the prima
 | `$agents-init ingest-receipt` | Accept/reject worker output and update `.workflow`. |
 | `$agents-init route-maestro` | Choose direct, worker, Maestro, or Ralph. |
 | `$agents-init multi-model-packet` | Build a shared context packet for Claude/Codex/Maestro/Codex App review. |
+| `$agents-init invoke-claude-review` | Run one bounded Claude review through Maestro delegate, read raw output, and return a receipt-shaped result. |
 | `$agents-init save-state` | Update recovery state before compression or handoff. |
 | `$agents-init maintain-knowledge` | Main agent updates, closes, promotes, indexes, or archives workflow knowledge instead of appending forever. |
 | `$agents-init self-update` | Pull the latest agents-init source from GitHub, install the skill, then optionally upgrade the current project's `.workflow`. |
@@ -250,6 +251,9 @@ powershell -NoProfile -ExecutionPolicy Bypass -File "<skill>\scripts\validate-wo
 
 # diagnose Maestro/Codex/App workflow readiness
 powershell -NoProfile -ExecutionPolicy Bypass -File "<skill>\scripts\doctor-agents.ps1" -ProjectPath "<project>"
+
+# run one bounded Claude review through Maestro and read raw output
+powershell -NoProfile -ExecutionPolicy Bypass -File "<skill>\scripts\invoke-claude-review.ps1" -ProjectPath "<project>" -Task "<bounded analysis task>" -Json
 
 # print pressure prompts for forward-testing this skill on the project
 powershell -NoProfile -ExecutionPolicy Bypass -File "<skill>\scripts\pressure-test-agents.ps1" -ProjectPath "<project>"
