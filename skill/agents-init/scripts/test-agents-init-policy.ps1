@@ -83,6 +83,7 @@ Assert-True ($doctor -match 'role_routes' -and $doctor -match 'explicit_claude_d
 
 $multiModelReference = Read-Text (Join-Path $skillRoot 'references\multi-model-shared-context.md')
 Assert-True ($multiModelReference -match 'Prefer `maestro_delegate` for Claude' -and $multiModelReference -match 'cc2` is the local Claude profile/alias reference and fallback') 'Multi-model policy must prefer Maestro delegate raw-output lifecycle and treat cc2 as profile/alias fallback, not default context dumping.'
+Assert-True ($multiModelReference -match 'User-Visible Model Evidence' -and $multiModelReference -match 'raw_output_ref' -and $multiModelReference -match 'main agent''s synthesis') 'Multi-model policy must require user-visible Claude/raw model evidence, not only hidden receipt conclusions.'
 
 $routeIntent = Read-Text (Join-Path $skillRoot 'scripts\route-intent.ps1')
 Assert-True ($routeIntent -match 'prefer proven Maestro delegate' -and $routeIntent -match 'invoke-claude-review.ps1' -and $routeIntent -notmatch 'Commands @\("cc2 --safe-mode -p <compact-packet>') 'Claude intent routing must recommend the agents-init Claude invocation wrapper, not a direct cc2-only command.'

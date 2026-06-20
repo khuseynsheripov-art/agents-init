@@ -15,6 +15,19 @@ Multi-model work is not "open several chats and hope." It is a main-agent contro
 
 Claude is never a second main agent. The main agent decides the question, context size, route, max turns, receipt acceptance, and close/resume policy.
 
+## User-Visible Model Evidence
+
+When the main agent cites Claude or another model, it must show evidence instead of only saying "the model concluded." The user-facing answer should include:
+
+- the bounded task sent to the model, in one short sentence;
+- the route and id, such as `maestro delegate` plus `exec_id`, or `cc2` plus `session_id`;
+- `raw_output_ref` or the command used to read raw output;
+- 2-5 key points from the model's raw output, clearly labeled as model output or summary;
+- the main agent's synthesis: agree, disagree, unresolved, and why;
+- what the model output proves and does not prove.
+
+Do not hide a model review behind a receipt label. If the model produced useful reasoning, expose the useful reasoning. If raw output is empty, missing, stale, or only metadata, say the review is inconclusive and do not cite it as a conclusion.
+
 ## Async Communication Reality
 
 There are three different "async" layers. Do not merge them mentally:
