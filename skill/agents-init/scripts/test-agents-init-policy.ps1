@@ -79,6 +79,16 @@ Assert-True ($badModelFiles.Count -eq 0) ("Skill contains stale or non-portable 
 
 $doctor = Read-Text (Join-Path $skillRoot 'scripts\doctor-agents.ps1')
 Assert-True ($doctor -match 'cc2' -and $doctor -match 'claude_command_routes') 'doctor-agents.ps1 must report cc2/claude command route discovery separately from Maestro.'
+Assert-True ($doctor -match 'role_routes' -and $doctor -match 'explicit_claude_delegate_policy') 'doctor-agents.ps1 must report Maestro role mappings separately from explicit --to claude delegate policy.'
+
+$multiModelReference = Read-Text (Join-Path $skillRoot 'references\multi-model-shared-context.md')
+Assert-True ($multiModelReference -match 'Prefer `maestro_delegate` for Claude' -and $multiModelReference -match 'cc2` is the local Claude profile/alias reference and fallback') 'Multi-model policy must prefer Maestro delegate raw-output lifecycle and treat cc2 as profile/alias fallback, not default context dumping.'
+
+$routeIntent = Read-Text (Join-Path $skillRoot 'scripts\route-intent.ps1')
+Assert-True ($routeIntent -match 'prefer proven Maestro delegate' -and $routeIntent -match 'maestro delegate --to claude' -and $routeIntent -notmatch 'Commands @\("cc2 --safe-mode -p <compact-packet>') 'Claude intent routing must recommend bounded Maestro delegate first, not a direct cc2-only command.'
+
+$modelPolicyTemplate = Read-Text (Join-Path $skillRoot 'assets\project-template\.workflow\model_policy.yaml')
+Assert-True ($modelPolicyTemplate -match 'preferred_route: maestro_delegate_when_raw_output_proven' -and $modelPolicyTemplate -match 'cc2_profile_reference') 'model_policy template must encode Maestro delegate as preferred proven lifecycle and cc2 as a local profile reference/fallback.'
 
 $caseStudy = Read-Text (Join-Path $skillRoot 'references\case-studies\ozon-canvas.md')
 Assert-True ($caseStudy -match '/image mainline integration vs /canvas/ozon-suite sidecar drift') 'Ozon/Canvas case study must name the required first diagnosis exactly.'

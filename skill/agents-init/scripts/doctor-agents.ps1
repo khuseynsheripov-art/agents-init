@@ -156,6 +156,29 @@ $maestroConfigSource = if (Test-Path -LiteralPath $workspaceMaestroConfig -PathT
 $isWindows = [System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform([System.Runtime.InteropServices.OSPlatform]::Windows)
 $terminalBackendHint = if ($env:TMUX -or $env:WEZTERM_PANE) { 'terminal_backend_possible' } else { 'terminal_backend_not_detected' }
 
+function Get-RoleRouteFromDelegateText {
+  param(
+    [string]$Text,
+    [string]$Role
+  )
+  foreach ($line in ($Text -split "\r?\n")) {
+    if ($line -match "^\s*$([regex]::Escape($Role))\s+.+?\s+(\S+)\s*$") {
+      return $Matches[1]
+    }
+  }
+  return ''
+}
+
+$roleRoutes = [ordered]@{
+  analyze = Get-RoleRouteFromDelegateText -Text $maestroDelegate.stdout -Role 'analyze'
+  review = Get-RoleRouteFromDelegateText -Text $maestroDelegate.stdout -Role 'review'
+  plan = Get-RoleRouteFromDelegateText -Text $maestroDelegate.stdout -Role 'plan'
+  brainstorm = Get-RoleRouteFromDelegateText -Text $maestroDelegate.stdout -Role 'brainstorm'
+  implement = Get-RoleRouteFromDelegateText -Text $maestroDelegate.stdout -Role 'implement'
+}
+$claudeRoles = @($roleRoutes.GetEnumerator() | Where-Object { $_.Value -match 'claude' } | ForEach-Object { $_.Key })
+$codexRoles = @($roleRoutes.GetEnumerator() | Where-Object { $_.Value -match 'codex' } | ForEach-Object { $_.Key })
+
 $result = [ordered]@{
   project = $project
   workflow = [ordered]@{
@@ -183,6 +206,10 @@ $result = [ordered]@{
     delegate_config_ok = $maestroDelegate.ok
     delegate_config = $maestroDelegate.stdout
     delegate_config_error = $maestroDelegate.stderr
+    role_routes = $roleRoutes
+    claude_role_routes = $claudeRoles
+    codex_role_routes = $codexRoles
+    explicit_claude_delegate_policy = 'Use maestro delegate --to claude for bounded Claude review unless project-local role mapping is accepted and smoke-proven.'
   }
   claude_command_routes = [ordered]@{
     cc2 = [ordered]@{
@@ -199,7 +226,7 @@ $result = [ordered]@{
       version_error = if ($claudeVersion) { $claudeVersion.stderr } else { '' }
       status = if ($claudeRoute.found) { 'discovered_needs_profile_specific_smoke_before_use' } else { 'not_found' }
     }
-    preferred_policy = 'prefer_project_approved_wrapper_after_exact_smoke; do_not_treat_default_claude_failure_as_cc2_failure'
+    preferred_policy = 'prefer_maestro_delegate_when_raw_output_proven; use_cc2_as_profile_reference_and_fallback; do_not_treat_default_claude_failure_as_cc2_failure'
     verification_boundary = 'discovery_and_version_are_not_model_review_receipts'
   }
   environment = [ordered]@{
@@ -215,6 +242,8 @@ if (-not $recover.ok) { $result.recommendations += 'Fix workflow recovery before
 if (-not $validate.ok) { $result.recommendations += 'Fix workflow validation errors before claiming configured.' }
 if (-not $maestroVersion.ok) { $result.recommendations += 'Install or repair Maestro before using Maestro/Ralph routes.' }
 if ($maestroConfigSource -eq 'global') { $result.recommendations += 'Global Maestro config is active; require stronger confirmation before writing it and record rollback.' }
+if ($maestroDelegate.ok -and $roleRoutes.review -and $roleRoutes.review -ne 'claude') { $result.recommendations += "Maestro review role currently routes to $($roleRoutes.review); explicit --to claude can still be used for bounded Claude reviews, or write project-local role mapping after user confirmation." }
+if ($maestroDelegate.ok -and $roleRoutes.brainstorm -and $roleRoutes.brainstorm -ne 'claude') { $result.recommendations += "Maestro brainstorm role currently routes to $($roleRoutes.brainstorm); do not claim role-routed Claude brainstorm unless this is changed and smoke-proven." }
 if ($cc2Route.found) { $result.recommendations += 'cc2 is available as a separate Claude route; smoke cc2 directly before using it as a review receipt.' }
 if ($claudeRoute.found) { $result.recommendations += 'default claude is available as a separate route; do not prefer it over cc2 unless that exact profile smokes successfully.' }
 if (-not $cc2Route.found -and -not $claudeRoute.found) { $result.recommendations += 'No direct Claude command was discovered; use interactive packet flow or local multi-perspective review.' }

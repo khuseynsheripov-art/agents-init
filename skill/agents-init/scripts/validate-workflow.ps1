@@ -201,6 +201,18 @@ if ($memoryPoints -and ($memoryPoints -notmatch 'memory_points:' -or $memoryPoin
 if ($modelPolicy -and ($modelPolicy -notmatch 'default_model_alias:\s*opus' -or $modelPolicy -notmatch 'cheap_model_alias:\s*sonnet')) {
   Add-Issue -Level 'warning' -Message 'model_policy.yaml should define opus as the default Claude review alias and sonnet as the quota-saving alias.' -File '.workflow/model_policy.yaml'
 }
+if ($modelPolicy -and ($modelPolicy -notmatch 'preferred_route:\s*maestro_delegate_when_raw_output_proven' -or $modelPolicy -notmatch 'fallback_route:\s*cc2_profile_reference_capturable_cli')) {
+  Add-Issue -Level 'warning' -Message 'model_policy.yaml should prefer Maestro delegate when raw output is proven and treat cc2 as a profile/alias fallback, not the default lifecycle.' -File '.workflow/model_policy.yaml'
+}
+if ($modelPolicy -and $modelPolicy -notmatch '(?m)^\s*route_evidence:\s*$') {
+  Add-Issue -Level 'warning' -Message 'model_policy.yaml should include route_evidence so Maestro/cc2 route status is separated from route policy.' -File '.workflow/model_policy.yaml'
+}
+if ($modelPolicy -and $modelPolicy -match '(?ms)^\s{2}maestro_delegate:\s*\r?\n(?:(?!^\s{2}\S).)*?^\s{4}status:\s*not_tested\s*$') {
+  Add-Issue -Level 'warning' -Message 'Maestro delegate route policy is configured but raw-output smoke is not recorded as proven.' -File '.workflow/model_policy.yaml'
+}
+if ($modelPolicy -and $modelPolicy -match 'Prefer a project-approved wrapper such as cc2 when it smokes successfully') {
+  Add-Issue -Level 'warning' -Message 'model_policy.yaml still contains the old cc2-first route policy; rerun agents-init upgrade.' -File '.workflow/model_policy.yaml'
+}
 if ($modelPolicy -and (Test-SuspiciousYamlDoubleQuote $modelPolicy)) {
   Add-Issue -Level 'error' -Message 'model_policy.yaml appears to contain YAML-invalid doubled quotes inside a double-quoted scalar; use backslash-escaped quotes or single quotes.' -File '.workflow/model_policy.yaml'
 }

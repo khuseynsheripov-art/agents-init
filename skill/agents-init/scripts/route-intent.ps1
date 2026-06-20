@@ -212,16 +212,18 @@ if (Test-AnyPattern $lower $patterns['menu']) {
 } elseif ((Test-AnyPattern $lower $patterns['multimodel']) -and -not (Test-AnyPattern $lower $patterns['no_claude'])) {
   $modelAlias = if (Test-AnyPattern $lower $patterns['sonnet']) { 'sonnet' } else { 'opus' }
   $executionMode = if (Test-AnyPattern $lower $patterns['continuous_model']) { 'capturable_cli_continuous' } else { 'capturable_cli_one_shot' }
+  $maestroCommand = "maestro delegate --to claude --mode analysis --cd `"$project`" <bounded-analysis-task>"
+  $fallbackCommand = "cc2 --safe-mode -p <compact-packet> --model $modelAlias --output-format json" + $(if ($executionMode -eq 'capturable_cli_one_shot') { ' --no-session-persistence' } else { ' --resume <session_id>' })
   $route = New-Route `
     -Name 'multi-model-packet -> claude-review' `
-    -Action "Create a compact recovered context packet, request Claude model alias '$modelAlias' with $executionMode, capture output, and ingest a model review receipt." `
+    -Action "Create a compact recovered context packet or bounded delegate task, request Claude model alias '$modelAlias', prefer proven Maestro delegate raw output, fallback to cc2 only when Maestro is inconclusive, and ingest a model review receipt." `
     -Gate 'second_view_review' `
     -Confidence 'high' `
     -Reason 'Prompt explicitly asks for Claude, cc2, opus/sonnet, another model, second-view critique, or model-level debate.' `
     -ReadFirst ($readCore + @('.workflow/model_policy.yaml', 'references/multi-model-shared-context.md', 'references/multi-model-role-policy.md')) `
     -Templates @('.workflow/templates/multi_model_context_packet.md', '.workflow/templates/model_review_receipt.yaml', '.workflow/templates/orchestration_decision.yaml') `
-    -Commands @("cc2 --safe-mode -p <compact-packet> --model $modelAlias --output-format json" + $(if ($executionMode -eq 'capturable_cli_one_shot') { ' --no-session-persistence' } else { ' --resume <session_id>' })) `
-    -MustNot @('Do not route routine implementation to Claude by default.', 'Do not claim multi-model proof unless a non-Codex model actually returned output.', 'Do not resume an old model session without a bounded reason.', 'Record requested_model_alias and actual model reported by the tool.')
+    -Commands @($maestroCommand, 'maestro delegate output <execId>', $fallbackCommand) `
+    -MustNot @('Do not route routine implementation to Claude by default.', 'Do not claim multi-model proof unless a non-Codex model actually returned raw output.', 'Do not resume an old model session without a bounded reason.', 'Do not dump all recovered context into cc2.', 'Record requested_model_alias and actual model reported by the tool.', 'Treat cc2 as profile/alias fallback, not the default lifecycle.')
 } elseif (Test-AnyPattern $lower $patterns['sample']) {
   $route = New-Route `
     -Name 'sample_decision -> research -> human gate' `

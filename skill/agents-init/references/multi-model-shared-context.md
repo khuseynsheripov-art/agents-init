@@ -7,10 +7,13 @@ Use this reference when the user wants Codex, Claude, Maestro, Codex App session
 Multi-model work is not "open several chats and hope." It is a main-agent controlled evidence loop:
 
 1. Recover local context and memory points.
-2. Build one shared context packet.
-3. Pick the execution mode that actually works.
-4. Require a model review receipt.
-5. Main agent synthesizes, accepts/rejects, and updates `.workflow` or Maestro knowledge.
+2. Define one bounded analysis task with allowed context and forbidden decisions.
+3. Prefer a proven Maestro delegate route, then read raw delegate output.
+4. Use direct `cc2` only as a local Claude profile/alias reference and fallback path.
+5. Require a model review receipt.
+6. Main agent synthesizes, accepts/rejects, and updates `.workflow` or Maestro knowledge.
+
+Claude is never a second main agent. The main agent decides the question, context size, route, max turns, receipt acceptance, and close/resume policy.
 
 ## Async Communication Reality
 
@@ -42,7 +45,7 @@ The main agent may use Maestro `agent-msg` to log that a message was sent or a r
 | `interactive_cli_continuous` | `cc2` or another TUI is used by the user for human-in-the-loop multi-turn work | Give the user a packet to paste and require a receipt back |
 | `capturable_cli_one_shot` | `cc2 --safe-mode -p --model <model> --output-format json --no-session-persistence` is enough | Ask one bounded question, capture JSON, do not resume |
 | `capturable_cli_continuous` | `cc2 --safe-mode -p --model <model> --output-format json` works and can resume with `--resume <session_id>` | Drive the model from the main agent/script, save JSON output, and ingest a receipt |
-| `maestro_delegate` | `maestro delegate` returns usable output from the configured model/profile | Save delegate id/output as a receipt; prefer this for role-routed multi-model work when doctor proves it |
+| `maestro_delegate` | `maestro delegate` returns usable output from the configured model/profile | Send one bounded analysis task, read `delegate output` or raw transcript, save delegate id/output as a receipt; prefer this when doctor proves raw output |
 | `codex_app_one_shot` | Independent bounded analysis or verification | Register one-shot worker and ingest receipt |
 | `codex_app_continuous` | Reusable role or MVP session should persist | Register continuous role with scope and conflict rules |
 | `blocked` | Auth/model/tool control fails | Record failure and do not claim review happened |
@@ -63,7 +66,11 @@ Use `--safe-mode` when the goal is a clean review receipt instead of tool execut
 
 ## Preferred Route
 
-Prefer `maestro_delegate` for Claude when it is proven on the current machine because it fits the workflow system: bounded task, role routing, history, `delegate output`, and receipt ingest. Use direct `cc2` when:
+Prefer `maestro_delegate` for Claude when it is proven on the current machine because it fits the workflow system: bounded task, role routing, history, `delegate output`, and receipt ingest.
+
+`cc2` is the local Claude profile/alias reference and fallback, not the default lifecycle. On this machine it may show how the intended Claude account is selected, for example a wrapper that sets `CLAUDE_CONFIG_DIR` and accepts the moving model alias `opus`. Copy the idea, not the hardcoded path: discover the wrapper, inspect what it does, smoke the same profile through Maestro if possible, then record the actual model from raw output.
+
+Use direct `cc2` when:
 
 - Maestro delegate is not installed, not configured, or not raw-output-proven;
 - the user explicitly wants to continue a known Claude session id;
@@ -71,6 +78,8 @@ Prefer `maestro_delegate` for Claude when it is proven on the current machine be
 - Maestro was updated and doctor detects adapter/config drift.
 
 Do not turn `cc2` into a giant chat dump. Even with `cc2`, pass a compact shared packet and ingest a receipt.
+
+Do not send all recovered context to Claude by default. Send only the bounded task, the anchors needed to answer it, and the expected receipt format. If Claude needs more context, it asks for named missing anchors; the main agent decides whether to provide them.
 
 ## PM/FDE Routing Contract
 
@@ -175,21 +184,22 @@ Use Claude for:
 - adversarial review of plans before expensive implementation;
 - visual/sample/generated-image acceptance framing, while leaving final acceptance to the user.
 
-Do not build a permanent Claude role network in the first v2 pass. Use Claude as a bounded second-view analyst: one compact context packet, one second-view analysis or objection, then main Codex synthesizes and updates the formal state.
+Do not build a permanent Claude role network in the first v2 pass. Use Claude as a bounded second-view analyst: one compact context packet or Maestro delegate task, one second-view analysis or objection, then main Codex synthesizes and updates the formal state.
 
 Prefer this order:
 
-1. `capturable_cli_one_shot` with `--model opus` for one bounded high-value question.
-2. `capturable_cli_continuous` with `--model opus` only when the follow-up requires Claude's prior answer or role memory.
-3. `interactive_cli_continuous` when the user wants to personally explore with Claude.
+1. `maestro_delegate` with raw output proven for the configured Claude profile/model alias.
+2. `capturable_cli_one_shot` with `--model opus` for one bounded high-value question when Maestro is inconclusive.
+3. `capturable_cli_continuous` with `--model opus` only when the follow-up requires Claude's prior answer or role memory.
+4. `interactive_cli_continuous` when the user wants to personally explore with Claude.
 
 Do not keep resuming a Claude session just because it exists. Every resume carries prior context and can increase token use. If the next prompt can stand alone with a short packet, start a fresh one-shot instead.
 
 For milestone-level work where the user mentions Claude, second model, "反驳", "收敛", or an important plan debate, open a bounded review cycle:
 
 - recover anchors first;
-- create one compact packet;
-- choose `maestro_delegate` if proven, otherwise `cc2`;
+- create one compact packet or delegate task;
+- choose `maestro_delegate` if raw-output-proven, otherwise `cc2`;
 - set `max_review_turns` before the first call;
 - stop when a receipt is accepted, the gate changes, or quota/model risk appears.
 

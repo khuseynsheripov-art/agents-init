@@ -170,13 +170,14 @@ updated_at: "<update-on-use>"
 claude_review:
   default_model_alias: opus
   cheap_model_alias: sonnet
-  default_execution_mode: capturable_cli_one_shot
-  preferred_route: auto_discover_then_user_confirm
-  fallback_route: capturable_cli_one_shot
+  default_execution_mode: maestro_delegate
+  preferred_route: maestro_delegate_when_raw_output_proven
+  fallback_route: cc2_profile_reference_capturable_cli
   continuous_allowed: true
   max_review_turns_default: 2
   resume_policy: "Resume only when the next question depends on Claude's prior answer or role memory."
   close_policy: "Retire after receipt ingest, gate change, direction change, or quota concern."
+  lifecycle_policy: "Main agent sends one bounded analysis task, checks raw output, ingests a receipt, and then closes or resumes only with a written reason."
   command_template_one_shot: "<claude_command> --safe-mode -p <packet> --model opus --output-format json --no-session-persistence"
   command_template_resume: "<claude_command> --safe-mode -p <follow-up> --model opus --output-format json --resume <session_id>"
 
@@ -191,7 +192,8 @@ route_discovery:
   smoke_command_template: "<candidate> --safe-mode -p \"agents-init Claude smoke. Reply with AGENTSINIT-CLAUDE-SMOKE.\" --model opus --output-format json --no-session-persistence"
   maestro_delegate_smoke_template: "maestro delegate --to claude --mode analysis --cd <project> \"Smoke test. Reply with AGENTSINIT-MAESTRO-CLAUDE-SMOKE.\""
   selection_policy:
-    - "Prefer a project-approved wrapper such as cc2 when it smokes successfully."
+    - "Prefer Maestro delegate when raw output proves the configured Claude profile/model alias works."
+    - "Use a project-approved wrapper such as cc2 as the local Claude profile/alias reference and fallback route."
     - "Use default claude only when it smokes successfully for the active profile."
     - "Use Maestro delegate only when raw output contains a task-relevant smoke token."
     - "If multiple candidates work, ask the user which profile/route should be project default."
@@ -199,12 +201,42 @@ route_discovery:
 
 profile_policy:
   profile_label: ""
+  profile_reference_command: cc2
   env_var_name: CLAUDE_CONFIG_DIR
   env_value: ""
   allow_auto_profile_switch: false
   account_or_profile_switch_requires_user_confirmation: true
   do_not_store_secrets: true
   write_scope_default: project
+
+route_evidence:
+  maestro_delegate:
+    status: not_tested
+    last_smoke_at: ""
+    last_exec_id: ""
+    raw_output_non_empty: false
+    raw_output_ref: ""
+    maestro_version: ""
+    config_source: ""
+    profile_label: ""
+    notes:
+      - "A completed/meta status is not enough; raw output must contain the smoke token or task-relevant text."
+  cc2_profile_reference:
+    status: not_tested
+    last_smoke_at: ""
+    raw_output_non_empty: false
+    raw_output_ref: ""
+    profile_label: ""
+    notes:
+      - "cc2 is a local profile/alias reference and fallback, not the default context-dump lifecycle."
+  role_mapping:
+    status: not_checked
+    review_routes_to: ""
+    brainstorm_routes_to: ""
+    plan_routes_to: ""
+    verified_at: ""
+    notes:
+      - "If roles still route to Codex, use explicit --to claude for Claude delegate review or create project-local role config after user confirmation."
 
 overrides:
   no_claude_phrases:
@@ -466,7 +498,13 @@ actual_model_expected_from_tool: true
       $text = Get-DefaultModelPolicyText
     }
     if ($text -notmatch '(?m)^\s*preferred_route:\s*') {
-      $text = [regex]::Replace($text, '(?m)^(\s*default_execution_mode:\s*.*\r?\n)', "`$1  preferred_route: auto_discover_then_user_confirm`r`n  fallback_route: capturable_cli_one_shot`r`n", 1)
+      $text = [regex]::Replace($text, '(?m)^(\s*default_execution_mode:\s*.*\r?\n)', "`$1  preferred_route: maestro_delegate_when_raw_output_proven`r`n  fallback_route: cc2_profile_reference_capturable_cli`r`n", 1)
+    }
+    $text = [regex]::Replace($text, '(?m)^(\s*default_execution_mode:\s*).*$','${1}maestro_delegate')
+    $text = [regex]::Replace($text, '(?m)^(\s*preferred_route:\s*).*$','${1}maestro_delegate_when_raw_output_proven')
+    $text = [regex]::Replace($text, '(?m)^(\s*fallback_route:\s*).*$','${1}cc2_profile_reference_capturable_cli')
+    if ($text -notmatch '(?m)^\s*lifecycle_policy:\s*') {
+      $text = [regex]::Replace($text, '(?m)^(\s*close_policy:\s*.*\r?\n)', "`$1  lifecycle_policy: `"Main agent sends one bounded analysis task, checks raw output, ingests a receipt, and then closes or resumes only with a written reason.`"`r`n", 1)
     }
     $text = [regex]::Replace(
       $text,
@@ -491,7 +529,8 @@ route_discovery:
   smoke_command_template: "<candidate> --safe-mode -p \`"agents-init Claude smoke. Reply with AGENTSINIT-CLAUDE-SMOKE.\`" --model opus --output-format json --no-session-persistence"
   maestro_delegate_smoke_template: "maestro delegate --to claude --mode analysis --cd <project> \`"Smoke test. Reply with AGENTSINIT-MAESTRO-CLAUDE-SMOKE.\`""
   selection_policy:
-    - "Prefer a project-approved wrapper such as cc2 when it smokes successfully."
+    - "Prefer Maestro delegate when raw output proves the configured Claude profile/model alias works."
+    - "Use a project-approved wrapper such as cc2 as the local Claude profile/alias reference and fallback route."
     - "Use default claude only when it smokes successfully for the active profile."
     - "Use Maestro delegate only when raw output contains a task-relevant smoke token."
     - "If multiple candidates work, ask the user which profile/route should be project default."
@@ -503,12 +542,52 @@ route_discovery:
       $block = @"
 profile_policy:
   profile_label: ""
+  profile_reference_command: cc2
   env_var_name: CLAUDE_CONFIG_DIR
   env_value: ""
   allow_auto_profile_switch: false
   account_or_profile_switch_requires_user_confirmation: true
   do_not_store_secrets: true
   write_scope_default: project
+"@
+      $text = $text.TrimEnd() + "`r`n`r`n" + $block.TrimEnd() + "`r`n"
+    }
+    if ($text -match '(?m)^\s*profile_policy:\s*$' -and $text -notmatch '(?m)^\s*profile_reference_command:\s*') {
+      $text = [regex]::Replace($text, '(?m)^(\s*profile_label:\s*.*\r?\n)', "`$1  profile_reference_command: cc2`r`n", 1)
+    }
+    if ($text -match 'Prefer a project-approved wrapper such as cc2 when it smokes successfully\.') {
+      $text = $text -replace '    - "Prefer a project-approved wrapper such as cc2 when it smokes successfully\."\r?\n', "    - `"Prefer Maestro delegate when raw output proves the configured Claude profile/model alias works.`"`r`n    - `"Use a project-approved wrapper such as cc2 as the local Claude profile/alias reference and fallback route.`"`r`n"
+    }
+    if ($text -notmatch '(?m)^\s*route_evidence:\s*$') {
+      $block = @"
+route_evidence:
+  maestro_delegate:
+    status: not_tested
+    last_smoke_at: ""
+    last_exec_id: ""
+    raw_output_non_empty: false
+    raw_output_ref: ""
+    maestro_version: ""
+    config_source: ""
+    profile_label: ""
+    notes:
+      - "A completed/meta status is not enough; raw output must contain the smoke token or task-relevant text."
+  cc2_profile_reference:
+    status: not_tested
+    last_smoke_at: ""
+    raw_output_non_empty: false
+    raw_output_ref: ""
+    profile_label: ""
+    notes:
+      - "cc2 is a local profile/alias reference and fallback, not the default context-dump lifecycle."
+  role_mapping:
+    status: not_checked
+    review_routes_to: ""
+    brainstorm_routes_to: ""
+    plan_routes_to: ""
+    verified_at: ""
+    notes:
+      - "If roles still route to Codex, use explicit --to claude for Claude delegate review or create project-local role config after user confirmation."
 "@
       $text = $text.TrimEnd() + "`r`n`r`n" + $block.TrimEnd() + "`r`n"
     }

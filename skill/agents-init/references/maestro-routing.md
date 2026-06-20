@@ -22,7 +22,7 @@ Maestro does not replace:
 | Brainstorm | Need PM/FDE/UX/Data/Test views | Synthesis and open threads |
 | Blueprint | Chaotic feature/second-development | Requirement/module/risk/acceptance map |
 | Worker | Independent bounded task | Worker receipt |
-| Maestro delegate | Role-routed analysis/write task | Delegate receipt or summarized output |
+| Maestro delegate | Role-routed analysis/write task | Delegate id plus raw output/transcript checked by main agent |
 | Ralph | Clear lifecycle with gates | Stage receipt and human pause points |
 | Maestro spec/knowhow | Stable constraints or reusable recipes/decisions | Spec/knowhow entry or reference |
 | Maestro wiki/search/KG | Need to recover prior knowledge, code graph, or cross-workspace context | Retrieved anchors with proves/does_not_prove |
@@ -173,6 +173,8 @@ Do not change role config just to satisfy a single prompt unless the user accept
 - Gemini/Qwen/opencode/agy only when installed and configured.
 
 If Maestro's Claude adapter is inconclusive, use direct `cc2` capturable CLI as a separate route and record that it was not a Maestro delegate.
+
+For Claude, use `cc2` primarily as a local profile/alias reference and fallback route. If `cc2` works because it selects a specific account/profile, inspect that wrapper behavior and configure or smoke Maestro's Claude tool against the same profile when possible. Do not replace the Maestro delegate lifecycle with a direct `cc2` context dump unless Maestro is inconclusive or the user explicitly wants a known `cc2` session.
 
 Command parameters and config have different meanings:
 
