@@ -1,0 +1,72 @@
+task_id: ""
+delegate_exec_id: ""
+tool: codex | claude | gemini | qwen | opencode | agy | unknown
+role: analyze | explore | review | implement | plan | brainstorm | research
+mode: analysis | write
+review_scope: read_only | propose_changes | implement | not_applicable
+status: submitted | completed | failed | cancelled | input_required | accepted | rejected
+
+scope: ""
+working_directory: ""
+command: ""
+maestro_binary_version: ""
+config_source: workspace | global | default | unknown
+profile_label: ""
+
+raw_evidence:
+  raw_output_ref: ""
+  raw_output_checked: false
+  meta_ref: ""
+  exit_code: null
+  stderr_or_error_summary: ""
+  empty_output: false
+  actual_tool_verified_from_output: false
+
+npm_patch_status:
+  - patch_id: ""
+    target_file: ""
+    applied_version: ""
+    current_version: ""
+    drift_detected: false
+    breaks_on_update: true
+
+config_change_rollback:
+  prior_snapshot_path: ""
+  change_description: ""
+  rollback_command: ""
+  review_date: ""
+
+profile_failure_event:
+  profile_label: ""
+  failure_type: auth | quota | expired | model_unavailable | config | unknown | none
+  timestamp: ""
+  user_decision: switch | retry | skip | repair | none
+
+files_read: []
+files_changed: []
+artifacts: []
+commands_run: []
+
+evidence:
+  - ""
+
+proves:
+  - ""
+
+does_not_prove:
+  - ""
+
+open_threads:
+  - ""
+
+risks:
+  - ""
+
+next_recommended_step:
+  - ""
+
+main_agent_ingest:
+  accepted: false
+  reason: ""
+  workflow_updates:
+    - ""

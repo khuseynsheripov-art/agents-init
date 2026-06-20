@@ -1,0 +1,47 @@
+id: ""
+status: draft | ready | in_progress | blocked | done
+gate: intake | clarify | blueprint | salvage | insertion_plan | visible_slice | implementation | acceptance | learn
+
+summary: ""
+
+PM:
+  user_value: ""
+  acceptance:
+    - ""
+  scope: ""
+  out_of_scope:
+    - ""
+
+FDE:
+  data_contracts:
+    - ""
+  interfaces:
+    - ""
+  failure_states:
+    - ""
+  rollback_or_recovery:
+    - ""
+
+route:
+  recommended: direct | grill | brainstorm | worker | maestro_delegate | ralph
+  reason: ""
+  can_delegate: false
+
+human_gates:
+  required:
+    - ""
+  status: pending | not_required | accepted | rejected
+
+evidence_required:
+  tests:
+    - ""
+  visual:
+    - ""
+  user_acceptance:
+    - ""
+
+open_threads:
+  - ""
+
+next_action: ""
+

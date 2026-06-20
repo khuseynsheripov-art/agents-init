@@ -1,0 +1,27 @@
+memory_points: []
+
+template:
+  id: ""
+  status: active | superseded | rejected | needs_user_acceptance
+  source:
+    type: user_message | workflow_file | receipt | local_doc | browser | maestro | web
+    path_or_url: ""
+    note: ""
+  claim: ""
+  applies_when:
+    - ""
+  does_not_apply_when:
+    - ""
+  evidence:
+    - ""
+  supersedes:
+    - ""
+  gate: ""
+  last_seen: ""
+
+rules:
+  - "Use memory points for repeated user corrections, direction changes, and compression-sensitive decisions."
+  - "Keep each memory point atomic."
+  - "Mark stale direction as superseded when the user changes direction."
+  - "Do not use memory points as keyword triggers; use them as evidence for semantic interpretation."
+  - "Promote stable reusable lessons to Maestro spec/knowhow instead of growing this file forever."

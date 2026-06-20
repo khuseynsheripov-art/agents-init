@@ -1,0 +1,37 @@
+handoff_id: ""
+from_thread_id: ""
+to_thread_id: ""
+status: draft | sent | received | accepted
+updated_at: ""
+
+recovered_goal: ""
+current_gate: ""
+active_task: ""
+
+open_threads:
+  - id: ""
+    question: ""
+    owner: user | main_agent | worker
+    next: ""
+
+evidence:
+  - ""
+
+recent_decisions:
+  locked:
+    - ""
+  proposed:
+    - ""
+
+forbidden_claims:
+  - ""
+
+next_action: ""
+
+must_read:
+  - .workflow/current.yaml
+  - .workflow/task.yaml
+  - .workflow/open_threads.yaml
+  - .workflow/verification.yaml
+  - .workflow/thread_registry.yaml
+

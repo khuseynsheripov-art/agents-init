@@ -1,0 +1,32 @@
+id: ""
+task_id: ""
+status: pending | passed | failed | partial | blocked
+
+commands_run:
+  - command: ""
+    exit_code: null
+    summary: ""
+
+browser_or_visual_evidence:
+  - type: browser | screenshot | generated_file | sample_output
+    path_or_url: ""
+    summary: ""
+
+proves:
+  - ""
+
+does_not_prove:
+  - ""
+
+risks:
+  - ""
+
+human_gate:
+  required: true
+  gate_reason: "Set to not_required only for non-UI, non-sample, non-image, non-business, non-external-write tasks."
+  gate: ""
+  status: not_required | pending | accepted | rejected
+  user_feedback: ""
+
+next_verification:
+  - ""

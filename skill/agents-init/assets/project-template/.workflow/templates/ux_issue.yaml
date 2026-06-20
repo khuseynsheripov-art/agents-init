@@ -1,0 +1,33 @@
+id: ""
+status: draft
+
+surface: ""
+user_signal: ""
+business_object: ""
+current_behavior: ""
+desired_behavior: ""
+
+acceptance:
+  visible:
+    - ""
+  interaction:
+    - ""
+  data_or_content:
+    - ""
+
+evidence:
+  screenshots: []
+  urls: []
+  files: []
+
+questions_for_user:
+  - ""
+
+verification_plan:
+  - browser_smoke: ""
+  - screenshot: ""
+  - user_acceptance: ""
+
+does_not_prove:
+  - "backend tests alone do not prove UI acceptance"
+

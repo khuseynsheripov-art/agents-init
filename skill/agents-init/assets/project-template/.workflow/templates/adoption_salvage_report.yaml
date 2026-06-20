@@ -1,0 +1,35 @@
+id: ""
+status: draft | reviewed | accepted
+source_project_or_worktree: ""
+created_at: ""
+
+summary: ""
+
+inventory:
+  rules: []
+  plans: []
+  contracts: []
+  evidence: []
+  receipts: []
+  knowhow: []
+  rejected_paths: []
+  unresolved: []
+
+promote_to_project_rules:
+  - ""
+
+keep_as_knowhow:
+  - ""
+
+do_not_copy_forward:
+  - ""
+
+open_threads:
+  - id: ""
+    question: ""
+    why_it_matters: ""
+    owner: user | main_agent
+    next: ""
+
+next_action: ""
+

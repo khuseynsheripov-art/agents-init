@@ -1,0 +1,48 @@
+task_id: ""
+worker_id: ""
+worker_thread_id: ""
+lifecycle: one_shot | continuous
+status: done | blocked | needs_review
+receipt_status: submitted | accepted | rejected
+
+scope: ""
+files_read: []
+files_changed: []
+commands_run: []
+thread_actions:
+  created: false
+  read_by_main: false
+  archived_or_closed: false
+  continuous_session_kept_active: false
+
+artifact:
+  - ""
+
+evidence:
+  - ""
+
+proves:
+  - ""
+
+decisions:
+  locked: []
+  proposed: []
+
+open_threads:
+  - ""
+
+does_not_prove:
+  - ""
+
+risks:
+  - ""
+
+next_recommended_step:
+  - ""
+
+main_agent_ingest:
+  accepted: false
+  reason: ""
+  workflow_updates:
+    - ""
+  receipt_archived_to: ""

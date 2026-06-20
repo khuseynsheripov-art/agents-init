@@ -1,0 +1,183 @@
+protocol_version: 2
+updated_at: "<update-on-use>"
+
+purpose: "Project-local control plane for Agents Init orchestration."
+
+main_agent:
+  active_thread_id: current
+  source: placeholder
+  status: active
+  responsibilities:
+    - semantic_intent_interpretation
+    - clarify_requirements
+    - select_gate
+    - route_maestro_or_worker_or_direct
+    - dispatch_bounded_workers
+    - ingest_worker_receipts
+    - update_workflow_state
+    - maintain_open_threads
+    - decide_final_acceptance
+  must_not_delegate:
+    - product_direction
+    - UI_acceptance
+    - generated_image_quality_acceptance
+    - sample_selection_acceptance
+    - external_write_or_publish_approval
+
+gate_model:
+  T0_intake: "Recover context and identify user value."
+  T1_clarify: "Resolve fuzzy direction with at most 1-3 questions."
+  T2_blueprint: "Map requirement, modules, data, risks, and acceptance."
+  T3_salvage: "Classify old docs/branches into rule, plan, contract, evidence, receipt, knowhow, rejected_path, unresolved."
+  T4_insertion_plan: "Decide exact insertion points, interfaces, tests, rollback, visible evidence."
+  T5_visible_slice: "Build or verify the smallest user-visible workflow slice."
+  T6_implementation: "Expand implementation after visible gate is accepted."
+  T7_acceptance_learn: "User acceptance, feedback-to-issues, knowhow/state update."
+
+interaction_menu:
+  orchestrate:
+    trigger:
+      - "$agents-init orchestrate"
+      - "我说不清"
+      - "方向不对"
+      - "怎么推进"
+    action: "Recover state, infer semantic signals, decide direct/Maestro/Codex App/human gate route, and record an orchestration decision."
+  recover:
+    trigger:
+      - "$agents-init recover"
+      - "恢复当前项目"
+      - "现在到哪了"
+    action: "Read .workflow and report goal, gate, evidence, unanswered points, next action."
+  grill:
+    trigger:
+      - "$agents-init grill"
+      - "grill me"
+      - "我很模糊"
+    action: "Restate goal, list uncertainty, ask at most 1-3 questions, then draft a task card."
+  brainstorm:
+    trigger:
+      - "$agents-init brainstorm"
+      - "多角度分析"
+    action: "Use PM/FDE/UX/Data/Test views and synthesize."
+  blueprint:
+    trigger:
+      - "$agents-init blueprint"
+      - "二开失败"
+      - "重新开发"
+    action: "Create requirement/module/risk/acceptance map before implementation."
+  route_intent:
+    trigger:
+      - "$agents-init route-intent"
+      - "我不知道用哪个命令"
+      - "帮我判断该怎么走"
+    action: "Convert the user's natural-language prompt into a route, matched signals, gates, templates, and must-not rules."
+  register_main:
+    trigger:
+      - "$agents-init register-main"
+      - "注册主会话"
+    action: "Write the active Codex thread id to thread_registry when available."
+  dispatch_worker:
+    trigger:
+      - "$agents-init dispatch-worker"
+      - "开子会话"
+      - "开 worker"
+    action: "Register one bounded worker and send a receipt-based prompt."
+  ingest_receipt:
+    trigger:
+      - "$agents-init ingest-receipt"
+      - "读取 worker 回执"
+    action: "Read worker receipt, accept/reject, update workflow and verification."
+  route_maestro:
+    trigger:
+      - "$agents-init route-maestro"
+      - "用 Maestro"
+      - "用 Ralph"
+    action: "Choose direct, worker, Maestro delegate, or Ralph based on current gate."
+  save_state:
+    trigger:
+      - "$agents-init save-state"
+      - "压缩前保存"
+    action: "Update current/task/open_threads/verification and recovery brief."
+
+roles:
+  main_agent:
+    decides: [gate, task_order, acceptance_status, next_action]
+    must_do_before_non_trivial_work:
+      - recover_state
+      - infer_semantic_signals
+      - decide_maestro_or_codex_app_or_direct
+      - record_orchestration_decision
+  PM:
+    focus: [user_value, acceptance, scope, non_goals]
+  FDE:
+    focus: [data_contract, interfaces, failure_states, rollback, recovery]
+  UX_UI:
+    focus: [visible_workflow, screenshots, interaction, user_acceptance]
+  Data_Research:
+    focus: [samples, evidence, source_boundaries, matrix]
+  QA_Verifier:
+    focus: [tests, browser_smoke, proves, does_not_prove]
+  Worker:
+    focus: [one_bounded_task]
+    cannot_decide: [product_direction, final_acceptance]
+
+routing:
+  orchestrate:
+    use_when: "User intent is fuzzy, strategic, cross-cutting, multi-agent, Maestro-related, or not covered by exact command examples."
+    output: "Orchestration decision with semantic signals, route, gates, Maestro/Codex App worker decision, and does_not_prove."
+  direct:
+    use_when: "Small clear local task with known acceptance and low product risk."
+    output: "Patch or answer plus verification."
+  grill:
+    use_when: "Fuzzy requirement, UI dissatisfaction, product direction uncertainty."
+    output: "Clarified task card and open questions."
+  brainstorm:
+    use_when: "Need multiple perspectives before plan."
+    output: "Synthesis with PM/FDE/UX/Data/Test notes."
+  blueprint:
+    use_when: "Chaotic feature work, second-development, or old branch failure."
+    output: "Requirement/module/risk/acceptance map."
+  worker:
+    use_when: "Independent bounded analysis, implementation, verification, or document triage."
+    output: "Worker receipt and artifact."
+  maestro_delegate:
+    use_when: "Clear role-routed analysis/write task where CLI delegation helps."
+    output: "Delegate receipt."
+  ralph:
+    use_when: "Clear long lifecycle with gates already defined."
+    output: "Stage receipt; must pause at human gates."
+
+human_gates:
+  - fuzzy_product_direction
+  - UI_UX_acceptance
+  - sample_selection
+  - generated_image_quality
+  - Ozon_reference_boundary
+  - Canvas_workflow_shape
+  - export_or_publish_claims
+  - external_write_actions
+
+worker_policy:
+  default_lifecycle: disposable
+  durable_allowed_when: "Repeated bounded work in one domain, with one receipt per task."
+  close_policy: "Archive or close disposable worker after receipt is ingested when tools allow it."
+  receipt_required: true
+  receipt_template: .workflow/templates/worker_receipt.yaml
+  dispatch_artifact_dir: .workflow/dispatch
+  ingest_rule: "Main agent checks receipt shape, inspects artifacts, then accepts/rejects and updates verification/open_threads/thread_registry."
+
+maestro_policy:
+  use_role_routing: true
+  delegate_receipt_template: .workflow/templates/delegate_receipt.yaml
+  windows_notes:
+    - "Do not assume Codex hooks work on Windows."
+    - "Do not assume terminal backend works in normal PowerShell."
+    - "Use Maestro delegate as bounded evidence producer, not the only control plane."
+
+state_files:
+  current: .workflow/current.yaml
+  task: .workflow/task.yaml
+  open_threads: .workflow/open_threads.yaml
+  verification: .workflow/verification.yaml
+  thread_registry: .workflow/thread_registry.yaml
+  orchestration_decision_template: .workflow/templates/orchestration_decision.yaml

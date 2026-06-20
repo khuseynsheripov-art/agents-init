@@ -1,0 +1,28 @@
+active_task: null
+queue: []
+
+task_card_template:
+  id: "<T1>"
+  status: pending
+  gate: clarify | analyze | plan | execute | verify | accept
+  PM:
+    user_value: ""
+    acceptance: []
+    scope: ""
+    out_of_scope: []
+  FDE:
+    data_contracts: []
+    interfaces: []
+    failure_states: []
+    rollback_or_recovery: []
+  scope: ""
+  out_of_scope: []
+  acceptance:
+    - ""
+  verification:
+    - ""
+  owner: main_agent
+  can_delegate: false
+  recommended_route: direct | grill | brainstorm | worker | maestro | ralph
+  dependencies: []
+  evidence: []

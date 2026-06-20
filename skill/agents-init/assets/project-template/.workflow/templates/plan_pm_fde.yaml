@@ -1,0 +1,39 @@
+task_id: ""
+status: draft
+
+PM:
+  user_value: ""
+  target_user: ""
+  acceptance:
+    - ""
+  non_goals:
+    - ""
+  human_gates:
+    - ""
+
+FDE:
+  data_contracts:
+    - ""
+  interfaces:
+    - ""
+  tests:
+    - ""
+  failure_states:
+    - ""
+  rollback_or_recovery:
+    - ""
+
+execution:
+  phases:
+    - id: T1
+      goal: ""
+      route: direct | worker | maestro | ralph
+      verification: ""
+      pause_for_user: false
+
+open_threads:
+  - ""
+
+does_not_prove:
+  - ""
+

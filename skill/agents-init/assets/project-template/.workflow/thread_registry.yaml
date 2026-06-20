@@ -1,0 +1,81 @@
+protocol_version: 1
+updated_at: "<update-on-use>"
+
+main_thread:
+  id: current
+  source: placeholder
+  role: main_agent_orchestrator
+  owns:
+    - user_confirmation_gates
+    - task_order
+    - .workflow/current.yaml
+    - .workflow/task.yaml
+    - .workflow/open_threads.yaml
+    - .workflow/verification.yaml
+  status: active
+  history: []
+
+workers: []
+archived_workers: []
+
+receipt_template: .workflow/templates/worker_receipt.yaml
+
+worker_lifecycle:
+  allowed_lifecycle:
+    - one_shot
+    - continuous
+  allowed_status:
+    - proposed
+    - registered
+    - sent
+    - active
+    - receipt_returned
+    - receipt_accepted
+    - receipt_rejected
+    - archived
+    - blocked
+  allowed_transitions:
+    proposed: [registered, blocked]
+    registered: [sent, active, blocked, archived]
+    sent: [active, receipt_returned, blocked]
+    active: [receipt_returned, blocked]
+    receipt_returned: [receipt_accepted, receipt_rejected, blocked]
+    receipt_accepted: [archived]
+    receipt_rejected: [registered, archived, blocked]
+    blocked: [registered, archived]
+    archived: []
+  default_lifecycle: one_shot
+  default_type: disposable_worker
+  continuous_rule: "Only use continuous sessions for repeated role or MVP context; still require one receipt per bounded task."
+
+rules:
+  - Main agent decides product direction; workers do not.
+  - Every worker gets one bounded question and one expected artifact.
+  - Worker output must include evidence, open_threads, does_not_prove, and next.
+  - Main agent must read receipts and update .workflow before continuing.
+  - Codex App thread IDs may be added when thread tools are used.
+
+worker_record_template:
+  id: "<codex-thread-id-or-maestro-delegate-id>"
+  source: codex_app | maestro_delegate | native_subagent | user_provided
+  lifecycle: one_shot | continuous
+  type: disposable_worker | durable_role_session | mvp_session | maestro_delegate | native_subagent
+  role: worker
+  task_id: ""
+  scope: ""
+  worktree: ""
+  may_edit: []
+  conflicts_with: []
+  must_not_edit:
+    - .workflow/current.yaml
+    - .workflow/task.yaml
+  report_to: current
+  status: registered
+  receipt_status: pending
+  receipt_path: ""
+  accepted_by_main_at: ""
+  archive_required: true
+  role_notes_path: ""
+  created_at: ""
+  last_active_at: ""
+  closed_at: ""

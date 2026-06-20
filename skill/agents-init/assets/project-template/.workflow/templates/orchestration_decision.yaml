@@ -1,0 +1,125 @@
+id: ""
+created_at: ""
+status: draft | decided | blocked | superseded
+
+user_words: ""
+
+recovered_state:
+  goal: ""
+  current_gate: ""
+  active_task: ""
+  next_action: ""
+
+recovered_anchors:
+  - source: ""
+    proves:
+      - ""
+    does_not_prove:
+      - ""
+
+root_diagnosis:
+  recovered_mainline:
+    - ""
+  current_observed_artifact:
+    - ""
+  contradiction:
+    - ""
+  first_confirmation_question: ""
+  status: not_needed | pending | stated | blocked
+
+decision_consequence_disclosure:
+  required: false
+  trigger:
+    - product_shape_change | route_or_page_change | integration_mode_change | workflow_axis_change | human_gate_confirmation | visible_slice_approval
+  visible_change:
+    - ""
+  integration_mode: core_integration | temporary_sidecar | workbench | adapter | import_export_path | analysis_only | unclear
+  what_yes_authorizes:
+    - ""
+  what_yes_does_not_authorize:
+    - ""
+  rejected_or_deferred_paths:
+    - ""
+  rollback_or_reframe:
+    - ""
+  user_can_understand_without_reading_docs: false
+  status: not_needed | pending | stated | blocked
+
+semantic_signals:
+  - signal: ""
+    evidence_from_user_words: ""
+    impact: ""
+
+recommended_route: direct | clarify | grill | brainstorm | blueprint | worker | maestro_delegate | ralph | human_acceptance | save_state
+
+why_not_direct:
+  - ""
+
+maestro_use:
+  needed: false
+  route: none | delegate | ralph | spec | knowhow | search | kg | msg | overlay
+  reason: ""
+  blocked_by_human_gate: false
+
+codex_app_workers:
+  needed: false
+  worker_count: 0
+  tasks:
+    - task_id: ""
+      lifecycle: one_shot | continuous
+      bounded_question: ""
+      scope: ""
+      expected_receipt: .workflow/templates/worker_receipt.yaml
+
+multi_perspective_review:
+  required: false
+  reason:
+    - fuzzy_requirement | long_task | old_project_salvage | ui_visible_gate | sample_or_image_gate | maestro_or_codex_app_orchestration | multi_model_review | repeated_failure
+  artifact: .workflow/templates/multi_perspective_review.yaml
+  views_required:
+    - PM
+    - FDE
+    - UX_visible_acceptance
+    - Workflow_context_engineering
+    - Maestro_Codex_App_orchestration
+    - Risk_overengineering
+  status: not_needed | pending | completed | blocked
+
+knowledge_lifecycle:
+  update_current:
+    - ""
+  update_task:
+    - ""
+  open_threads_to_close:
+    - ""
+  open_threads_to_add_or_keep:
+    - ""
+  memory_points_to_add:
+    - ""
+  memory_points_to_supersede:
+    - ""
+  promote_to_spec:
+    - category: ""
+      title: ""
+      reason: ""
+  promote_to_knowhow:
+    - type: ""
+      title: ""
+      reason: ""
+  kg_actions:
+    - none | index | sync | search | context
+  archive_or_receipts:
+    - ""
+  does_not_update:
+    - ""
+
+human_gates:
+  required:
+    - ""
+  pending:
+    - ""
+
+next_action: ""
+
+does_not_prove:
+  - ""

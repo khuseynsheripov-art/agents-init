@@ -1,0 +1,72 @@
+receipt_id: ""
+packet_id: ""
+created_at: ""
+
+model_identity:
+  tool: codex | claude | gemini | qwen | opencode | agy | other | unknown
+  requested_model_alias: ""
+  fallback_model_alias: ""
+  model: ""
+  session_or_exec_id: ""
+  actual_model_verified_from_output: false
+  profile_label: ""
+
+raw_evidence:
+  raw_output_ref: ""
+  raw_output_checked: false
+  meta_ref: ""
+  exit_code: null
+  stderr_or_error_summary: ""
+  empty_output: false
+
+execution_mode: interactive_cli_continuous | capturable_cli_one_shot | capturable_cli_continuous | maestro_delegate | codex_app_one_shot | codex_app_continuous | blocked
+review_scope: read_only | propose_changes | implement | not_applicable
+status: completed | failed | inconclusive | input_required
+
+lifecycle:
+  session_id: ""
+  close_after_ingest: true
+  retired_at: ""
+  resume_allowed: false
+  resume_reason: ""
+  resume_count: 0
+  retire_trigger: ""
+
+profile_failure_event:
+  profile_label: ""
+  failure_type: auth | quota | expired | model_unavailable | config | unknown | none
+  timestamp: ""
+  user_decision: switch | retry | skip | repair | none
+
+bounded_question: ""
+answer: ""
+reasoning_summary:
+  - ""
+
+evidence:
+  - source: ""
+    used_for: ""
+
+assumptions:
+  - ""
+
+proves:
+  - ""
+
+does_not_prove:
+  - ""
+
+risks:
+  - ""
+
+conflicts_or_scope_issues:
+  - ""
+
+next_recommended_step:
+  - ""
+
+main_agent_ingest:
+  accepted: false
+  reason: ""
+  workflow_updates:
+    - ""

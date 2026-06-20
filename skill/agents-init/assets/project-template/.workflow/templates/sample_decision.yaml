@@ -1,0 +1,26 @@
+id: ""
+status: draft | proposed | accepted | rejected
+
+decision_type: sample_selection | reference_boundary | source_fact_boundary
+candidate_samples: []
+recommended_sample: ""
+reason: ""
+
+evidence:
+  files: []
+  urls: []
+  screenshots: []
+
+allowed_use:
+  - style_reference
+  - source_fact
+  - candidate
+
+blocked_claims:
+  - ""
+
+user_confirmation:
+  required: true
+  status: pending
+  answer: ""
+

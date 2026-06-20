@@ -1,0 +1,87 @@
+id: ""
+created_at: ""
+status: draft | reviewed | blocked | superseded
+
+trigger:
+  user_words: ""
+  current_gate: ""
+  why_review_is_required:
+    - fuzzy_requirement | long_task | old_project_salvage | ui_visible_gate | sample_or_image_gate | maestro_or_codex_app_orchestration | multi_model_review | repeated_failure
+
+recovered_anchors:
+  - source: ""
+    proves:
+      - ""
+    does_not_prove:
+      - ""
+
+views:
+  PM:
+    question: "What user value, scope boundary, and acceptance would make this worth doing?"
+    finding: ""
+    evidence:
+      - ""
+    risks_or_objections:
+      - ""
+    next_action: ""
+  FDE:
+    question: "What data contracts, interfaces, failure states, rollback, or recovery matter?"
+    finding: ""
+    evidence:
+      - ""
+    risks_or_objections:
+      - ""
+    next_action: ""
+  UX_visible_acceptance:
+    question: "What must the user see, compare, or approve beyond backend tests?"
+    finding: ""
+    evidence:
+      - ""
+    risks_or_objections:
+      - ""
+    next_action: ""
+  Workflow_context_engineering:
+    question: "Which prior anchors, memory points, receipts, and recovery files must be used?"
+    finding: ""
+    evidence:
+      - ""
+    risks_or_objections:
+      - ""
+    next_action: ""
+  Maestro_Codex_App_orchestration:
+    question: "What stays local, what becomes a worker, what uses Maestro, what uses Claude, and what must stop at a gate?"
+    finding: ""
+    evidence:
+      - ""
+    risks_or_objections:
+      - ""
+    next_action: ""
+  Risk_overengineering:
+    question: "What would become decorative process, stale memory, premature automation, false proof, or command burden?"
+    finding: ""
+    evidence:
+      - ""
+    risks_or_objections:
+      - ""
+    next_action: ""
+
+synthesis:
+  recommended_route: direct | clarify | grill | blueprint | worker | maestro_delegate | ralph | codex_app_session | claude_review | human_acceptance | blocked
+  current_gate: ""
+  decision: ""
+  open_threads_to_update:
+    - ""
+  memory_points_to_update:
+    - ""
+  knowledge_lifecycle:
+    - ""
+  human_gates:
+    - ""
+  does_not_prove:
+    - ""
+  next_action: ""
+
+receipt_or_archive:
+  save_to: ""
+  promoted_to_spec_or_knowhow:
+    - ""

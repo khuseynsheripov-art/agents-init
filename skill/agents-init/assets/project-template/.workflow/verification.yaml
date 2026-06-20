@@ -1,0 +1,17 @@
+verification_log: []
+
+template:
+  id: "<V1>"
+  task_id: ""
+  status: pending
+  commands_run: []
+  browser_or_visual_evidence: []
+  proves:
+    - ""
+  does_not_prove:
+    - ""
+  risks:
+    - ""
+  next_verification:
+    - ""
+
