@@ -24,6 +24,24 @@ Before implementation on any non-trivial request:
 10. Record the decision in an orchestration decision artifact or task card.
 11. Only then dispatch work or implement.
 
+## Maintenance Evidence Is Not Intent
+
+`init-agents.ps1 -Mode auto`, `-Mode upgrade`, protocol versions, and v1/v2 template status are setup checks. They help the main agent know whether recovery is safe, but they must not leak into the user's product or workflow clarification unless the user asked about upgrade/versioning or required workflow files are missing.
+
+Bad:
+
+```text
+I will first confirm whether this is v1/v2, then analyze your Canvas concern.
+```
+
+Good:
+
+```text
+Workflow recovery is valid. The live issue is that your current wording challenges whether prior Canvas `/image` integration drifted into a sidecar/new route, so I will diagnose that contradiction before asking design questions.
+```
+
+If the recovered `.workflow` contains historical "v2/root" business terms, cite them only when they are part of the business anchor, such as a plugin handoff or source package contract. Do not confuse business data version names with agents-init protocol versions.
+
 ## Semantic Continuation Loop
 
 When the user references prior work or sounds like they are correcting direction, do not treat the prompt as a fresh requirement and do not route by keywords. Run a semantic continuation loop:

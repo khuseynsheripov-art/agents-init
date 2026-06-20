@@ -117,6 +117,7 @@ Do not skip T2-T5 for UI, existing-workflow insertion, e-commerce/sample, genera
 - Do not treat tests as proof of UI acceptance.
 - Do not let a worker decide product direction.
 - Do not use `maestro -y` or Ralph auto-advance across human gates.
+- Do not turn workflow maintenance checks into user-facing intent. Unless the user asks about upgrade/versioning or required workflow files are missing, do not ask whether the project is v1/v2 and do not put protocol version status in the first clarification.
 - Do not copy every old project rule into a new project.
 - Do not say "configured" without running recover/validate or reading the relevant state files.
 - Do not ask clarification questions before retrieving context when the user clearly references prior work.

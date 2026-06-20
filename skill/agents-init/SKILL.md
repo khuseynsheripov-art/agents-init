@@ -41,6 +41,8 @@ If the user says they are confused, dissatisfied, unsure, wants a long task, or 
 
 If the prompt contains "previously", "last time", "we already discussed", prior ports/pages, screenshots, audits, samples, direction corrections, or project-specific terms, context retrieval comes before clarification. Ask questions only after stating what prior evidence was found and what it proves or does not prove.
 
+Workflow upgrade/version checks are maintenance evidence, not user intent. Do not ask whether the project is v1/v2, mention protocol versions, or make "upgrade mode" part of the first user-facing diagnosis unless the user explicitly asks about upgrading/versioning or required workflow files are missing. For a recovered project, summarize only: "workflow is recoverable/valid" and then return to the user's product/process contradiction.
+
 ## References To Load
 
 Read only the relevant reference:
@@ -190,6 +192,8 @@ For multi-model work:
 
 - distinguish `maestro_delegate`, `interactive_cli_continuous`, `capturable_cli_one_shot`, `capturable_cli_continuous`, `codex_app_one_shot`, and `codex_app_continuous`;
 - do not claim a Claude or other non-Codex review happened until usable output or a pasted receipt exists;
+- discover and smoke the local Claude route before use; wrappers such as `cc2`, default `claude`, and Maestro delegate are different routes;
+- do not report "Claude unavailable" when only one route failed. Say which route failed and which route, if any, succeeded;
 - default to one-shot Claude review for quota control; use `--resume <session_id>` only when the next question genuinely needs prior Claude context;
 - if `cc2` opens an interactive TUI, treat it as user-driven conversation; generate `.workflow/templates/multi_model_context_packet.md` for the user to paste and ingest `.workflow/templates/model_review_receipt.yaml` afterward;
 - if `cc2 --safe-mode -p ... --output-format json` works, treat it as capturable CLI review; store the session id only for bounded continuous analysis and retire it when the receipt is ingested;

@@ -118,14 +118,35 @@ For Maestro, store model aliases such as `opus` or `sonnet` in routing config wh
 
 Users may have one Claude profile, multiple profiles, wrappers such as `cc2`, or an expired/default account. `agents-init` should guide configuration but not silently manage accounts.
 
+Do not hardcode this user's `cc2` or `CLAUDE_CONFIG_DIR` as the universal route. Treat wrappers, profile directories, and aliases as discovered local configuration.
+
+Discovery order for a new machine or project:
+
+1. Inspect project policy in `.workflow/model_policy.yaml`.
+2. Inspect available commands with `Get-Command cc2` and `Get-Command claude`.
+3. Inspect Maestro config with `maestro config delegate show --json` when Maestro exists.
+4. Smoke the exact route before relying on it.
+5. Ask the user before writing any project-local or global route policy.
+
+Success is route-specific:
+
+| Route | Success Evidence |
+| --- | --- |
+| `cc2` wrapper | `cc2 --safe-mode -p ... --model opus --output-format json` exits 0 and raw JSON contains task output plus actual model evidence. |
+| default `claude` | Same capturable smoke succeeds for the active default profile. |
+| Maestro delegate | `maestro delegate output <execId>` or raw transcript contains the smoke token and task-relevant text. |
+
+If `cc2` works but default `claude` fails, report that the default Claude profile is not the project route. If Maestro delegate fails while `cc2` works, report Maestro adapter/config failure, not "Claude unavailable."
+
 Recommended declarative fields for a project or user policy:
 
 ```yaml
 multi_model:
   claude:
-    preferred_route: maestro_delegate
+    preferred_route: auto_discover_then_user_confirm
     fallback_route: capturable_cli_one_shot
     requested_model_alias: opus
+    command: cc2
     profile_label: account2
     profile_switch_requires: explicit_user_confirmation
     env:
@@ -141,6 +162,7 @@ Rules:
 - Account/profile switches require explicit user confirmation.
 - If a profile expires, quota is exhausted, or auth fails, halt and report the failing profile; do not silently switch to another account.
 - If Maestro or Claude updates change model aliases, run a small smoke and update the alias policy only after user confirmation.
+- On another computer, rerun discovery and smoke. Do not assume the same wrapper name, profile directory, or Maestro adapter state exists.
 
 ## Quota And Context Policy
 

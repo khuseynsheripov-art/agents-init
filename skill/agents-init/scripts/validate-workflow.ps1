@@ -171,6 +171,9 @@ if ($memoryPoints -and ($memoryPoints -notmatch 'memory_points:' -or $memoryPoin
 if ($modelPolicy -and ($modelPolicy -notmatch 'default_model_alias:\s*opus' -or $modelPolicy -notmatch 'cheap_model_alias:\s*sonnet')) {
   Add-Issue -Level 'warning' -Message 'model_policy.yaml should define opus as the default Claude review alias and sonnet as the quota-saving alias.' -File '.workflow/model_policy.yaml'
 }
+if ($modelPolicy -and ($modelPolicy -notmatch '(?m)^\s*route_discovery:\s*$' -or $modelPolicy -notmatch '(?m)^\s*profile_policy:\s*$')) {
+  Add-Issue -Level 'warning' -Message 'model_policy.yaml should include route_discovery and profile_policy so Claude/cc2/Maestro routes are discovered and smoke-tested instead of hardcoded.' -File '.workflow/model_policy.yaml'
+}
 if ($multiModelPacket -and $multiModelPacket -notmatch 'requested_model_alias:\s*opus') {
   Add-Issue -Level 'warning' -Message 'multi_model_context_packet.md should include requested_model_alias: opus by default.' -File '.workflow/templates/multi_model_context_packet.md'
 }

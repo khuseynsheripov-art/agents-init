@@ -192,6 +192,7 @@ Doctor should check:
 - whether role mappings actually route review/brainstorm/plan to Claude or Codex;
 - whether the configured Claude model alias is accepted by the underlying CLI;
 - whether the intended Claude profile is active, for example through `CLAUDE_CONFIG_DIR`;
+- whether a project-approved wrapper such as `cc2` exists and smokes successfully;
 - whether raw delegate output contains a task-relevant token, not just a completed meta status;
 - whether local package patches are required and may be overwritten by updates.
 - whether `maestro --version` changed since the last successful delegate smoke.
@@ -201,6 +202,7 @@ Repair policy:
 - reading configs and reporting diffs is allowed;
 - writing project-local `.maestro/cli-tools.json` requires user confirmation;
 - writing global `~/.maestro/cli-tools.json` requires stronger confirmation and a rollback note;
+- writing `.workflow/model_policy.yaml` is project policy and should record command/profile labels without secrets;
 - patching npm-installed Maestro code is a temporary local repair only, never a portable skill default;
 - credential refresh, account switching, quota purchase, and destructive config reset must remain manual user actions.
 

@@ -371,6 +371,51 @@ actual_model_expected_from_tool: true
     }
   }
 
+  $modelPolicyPath = Join-Path $Project '.workflow\model_policy.yaml'
+  if (Test-Path -LiteralPath $modelPolicyPath -PathType Leaf) {
+    $text = Get-Content -Raw -Encoding UTF8 -LiteralPath $modelPolicyPath
+    if ($text -notmatch '(?m)^\s*preferred_route:\s*') {
+      $text = [regex]::Replace($text, '(?m)^(\s*default_execution_mode:\s*.*\r?\n)', "`$1  preferred_route: auto_discover_then_user_confirm`r`n  fallback_route: capturable_cli_one_shot`r`n", 1)
+    }
+    if ($text -notmatch '(?m)^\s*route_discovery:\s*$') {
+      $block = @"
+route_discovery:
+  candidate_commands:
+    - cc2
+    - claude
+  detect_command:
+    - "Get-Command cc2 -ErrorAction SilentlyContinue"
+    - "Get-Command claude -ErrorAction SilentlyContinue"
+  smoke_required_before_use: true
+  smoke_command_template: "<candidate> --safe-mode -p ""agents-init Claude smoke. Reply with AGENTSINIT-CLAUDE-SMOKE."" --model opus --output-format json --no-session-persistence"
+  maestro_delegate_smoke_template: "maestro delegate --to claude --mode analysis --cd <project> ""Smoke test. Reply with AGENTSINIT-MAESTRO-CLAUDE-SMOKE."""
+  selection_policy:
+    - "Prefer a project-approved wrapper such as cc2 when it smokes successfully."
+    - "Use default claude only when it smokes successfully for the active profile."
+    - "Use Maestro delegate only when raw output contains a task-relevant smoke token."
+    - "If multiple candidates work, ask the user which profile/route should be project default."
+    - "If no candidate works, mark Claude review blocked and continue with local multi-perspective analysis."
+"@
+      $text = $text.TrimEnd() + "`r`n`r`n" + $block.TrimEnd() + "`r`n"
+    }
+    if ($text -notmatch '(?m)^\s*profile_policy:\s*$') {
+      $block = @"
+profile_policy:
+  profile_label: ""
+  env_var_name: CLAUDE_CONFIG_DIR
+  env_value: ""
+  allow_auto_profile_switch: false
+  account_or_profile_switch_requires_user_confirmation: true
+  do_not_store_secrets: true
+  write_scope_default: project
+"@
+      $text = $text.TrimEnd() + "`r`n`r`n" + $block.TrimEnd() + "`r`n"
+    }
+    if (Update-FileIfChanged -Path $modelPolicyPath -Text $text) {
+      $updated.Add('.workflow\model_policy.yaml')
+    }
+  }
+
   $threadPath = Join-Path $Project '.workflow\thread_registry.yaml'
   if (Test-Path -LiteralPath $threadPath -PathType Leaf) {
     $text = Get-Content -Raw -Encoding UTF8 -LiteralPath $threadPath
