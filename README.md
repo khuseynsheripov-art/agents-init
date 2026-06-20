@@ -35,7 +35,28 @@ Local runtime state such as `.workflow/`, `.tmp/`, and `maestro-knowledge-base/`
 
 ## Install Or Update Locally
 
-From this repo:
+There are three separate layers:
+
+```text
+Maestro CLI                      installed/upgraded by npm
+agents-init Codex skill           installed/upgraded from this git repo
+each business/test project         upgraded by the installed skill's init-agents.ps1
+```
+
+Maestro is a global CLI:
+
+```powershell
+npm install -g maestro-flow
+maestro --version
+```
+
+`agents-init` is not an npm package. It is a Codex skill installed under:
+
+```text
+%USERPROFILE%\.codex\skills\agents-init
+```
+
+From the development repo:
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install-local.ps1
@@ -46,10 +67,19 @@ This copies `skill/agents-init` to `%USERPROFILE%\.codex\skills\agents-init` aft
 From another local machine or test environment that has cloned this repo:
 
 ```powershell
+git clone https://github.com/khuseynsheripov-art/agents-init.git
+cd agents-init
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\update-from-git.ps1
 ```
 
 That script fast-forwards the repository from `origin/main`, then installs the skill. It does not touch any business project's `.workflow` state.
+
+For later updates in an existing clone:
+
+```powershell
+cd agents-init
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\update-from-git.ps1
+```
 
 ## Project Adoption
 
@@ -68,6 +98,15 @@ powershell -NoProfile -ExecutionPolicy Bypass -File "$env:USERPROFILE\.codex\ski
 ```
 
 Upgrade mode only creates missing v2 workflow files and updates known workflow templates. It does not decide product direction or overwrite project-owned docs.
+
+Example for the current Ozon/Canvas test worktree:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File "$env:USERPROFILE\.codex\skills\agents-init\scripts\init-agents.ps1" -ProjectPath "E:\ozon-erp\.worktrees\maestro-canvas-v030-lab" -Mode upgrade
+powershell -NoProfile -ExecutionPolicy Bypass -File "$env:USERPROFILE\.codex\skills\agents-init\scripts\recover-agents.ps1" -ProjectPath "E:\ozon-erp\.worktrees\maestro-canvas-v030-lab" -Json
+powershell -NoProfile -ExecutionPolicy Bypass -File "$env:USERPROFILE\.codex\skills\agents-init\scripts\validate-workflow.ps1" -ProjectPath "E:\ozon-erp\.worktrees\maestro-canvas-v030-lab" -Json
+powershell -NoProfile -ExecutionPolicy Bypass -File "$env:USERPROFILE\.codex\skills\agents-init\scripts\doctor-agents.ps1" -ProjectPath "E:\ozon-erp\.worktrees\maestro-canvas-v030-lab" -Json
+```
 
 ## GitHub Publication Policy
 
