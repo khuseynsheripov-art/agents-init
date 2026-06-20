@@ -44,6 +44,14 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install-local.ps1
 
 This copies `skill/agents-init` to `%USERPROFILE%\.codex\skills\agents-init` after making a timestamped backup of the previous installed copy.
 
+From another local machine or test environment that has cloned this repo:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\update-from-git.ps1
+```
+
+That script fast-forwards the repository from `origin/main`, then installs the skill. It does not touch any business project's `.workflow` state.
+
 ## Project Adoption
 
 After the skill is installed, a project can be adopted non-destructively:
@@ -54,6 +62,14 @@ powershell -NoProfile -ExecutionPolicy Bypass -File "$env:USERPROFILE\.codex\ski
 
 Each business project keeps its own `.workflow` state. Do not store project runtime state in this repo unless it is a sanitized test fixture.
 
+For an already-adopted project, run upgrade mode after installing a newer skill:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File "$env:USERPROFILE\.codex\skills\agents-init\scripts\init-agents.ps1" -ProjectPath "<project>" -Mode upgrade
+```
+
+Upgrade mode only creates missing v2 workflow files and updates known workflow templates. It does not decide product direction or overwrite project-owned docs.
+
 ## GitHub Publication Policy
 
 Start private. This project may include local paths, private workflow receipts, and business case studies during active iteration. Public release requires a separate sanitation pass:
@@ -63,4 +79,3 @@ Start private. This project may include local paths, private workflow receipts, 
 - no raw model receipts with session ids or costs;
 - no private business data;
 - case studies generalized or explicitly sanitized.
-
