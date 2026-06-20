@@ -2,7 +2,7 @@
 
 Reusable Codex skill and project workflow templates for recoverable main-agent orchestration.
 
-This repository is the source of truth for the `agents-init` skill. The installed runtime copy lives under the user's Codex skills directory, for example:
+This project is a strong add-on for Codex App multi-session work, Maestro knowledge/workflow routing, and non-interactive multi-model CLI review. The installed runtime copy lives under the user's Codex skills directory, for example:
 
 ```text
 %USERPROFILE%\.codex\skills\agents-init
@@ -28,8 +28,7 @@ It is not a command menu and not a product-direction decider. The main agent rem
 ```text
 skill/agents-init/        installable Codex skill
 scripts/                 repo-level install/update helpers
-docs/                    design notes that are safe to version
-agents-init-template/    early local template notes, not the install source
+docs/                    sanitized design notes
 ```
 
 Local runtime state such as `.workflow/`, `.tmp/`, and `maestro-knowledge-base/` is intentionally ignored by git.
