@@ -1,8 +1,8 @@
 # Agents Init
 
-Reusable Codex skill and project workflow templates for recoverable main-agent orchestration.
+maestro 的强势外挂，目标是会用 Codex App 多会话 + Maestro 智能 + 多 CLI 非交互大模型。
 
-This project is a strong add-on for Codex App multi-session work, Maestro knowledge/workflow routing, and non-interactive multi-model CLI review. The installed runtime copy lives under the user's Codex skills directory, for example:
+This repository is the source of truth for the `agents-init` skill. The installed runtime copy lives under the user's Codex skills directory, for example:
 
 ```text
 %USERPROFILE%\.codex\skills\agents-init
