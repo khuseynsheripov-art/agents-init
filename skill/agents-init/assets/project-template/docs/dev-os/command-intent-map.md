@@ -4,24 +4,26 @@ The user does not need to memorize exact commands. Route natural language to the
 
 | User says | Main agent should do |
 | --- | --- |
-| `$agents-init menu` | Show recover/clarify/brainstorm/plan/dispatch/route/save options. |
-| `$agents-init orchestrate` / "我说不清但方向不对" / "怎么推进" | Recover state, infer semantic signals, and decide direct/Maestro/Codex App/human gate routing. |
-| "初始化这个项目" | Create missing Agents Init files, then update `.workflow/current.yaml`. |
-| "adopt 这个已有项目" | Do not overwrite. Classify old docs/TODO/rules and create sidecar `.workflow`. |
-| "恢复当前项目" / "现在到哪了" | Read `.workflow/current.yaml`, `task.yaml`, `open_threads.yaml`, `verification.yaml`, `thread_registry.yaml`. |
-| "检查 agents-init 配置" / "doctor" | Run workflow validation plus Maestro/Codex environment diagnosis. |
-| "给我测试这个 skill 是否会跑偏" | Print pressure-test prompts and expected routes. |
-| "我不知道用哪个命令" / "帮我判断怎么走" | Run route-intent and preserve matched signals in open threads. |
-| "注册主会话" | Record the active main Codex thread id in `.workflow/thread_registry.yaml` when available. |
-| "我很模糊" / "我不会表达" | Restate goal, list uncertainty, ask at most 1-3 questions. |
-| "我对 UI 不满意" | Create/update a UX issue first; do not jump straight to code. |
-| "分析爆品/货源/样本" | Create/update a sample decision or research task with evidence boundaries. |
-| "多角度分析" | Use PM/FDE/UX/Data/Test views; synthesize into one task card or plan. |
-| "开 worker" / "开 Codex 子会话" | Register worker in `thread_registry.yaml`, give one bounded task and receipt contract. |
-| "读取 worker 回执" | Read worker output, accept/reject receipt, update workflow and verification. |
-| "用 Maestro/Ralph" | Use only after the current gate and human pause points are clear. |
-| "小目标很清楚" | Execute directly with completion standard and verification. |
-| "压缩前保存状态" / "新会话交接" | Update current/task/open_threads/verification and write a recovery brief. |
+| `$agents-init menu` / "agents-init help" / "what can you do" | Show the short natural-language menu, then ask what project or task to route. |
+| `$agents-init orchestrate` / "direction feels wrong" / "how should we proceed" | Recover state, infer semantic signals, and decide direct/Maestro/Codex App/human gate routing. |
+| "initialize this project" | Create missing Agents Init files, then update `.workflow/current.yaml`. |
+| "adopt this existing project" | Do not overwrite. Classify old docs/TODO/rules and create sidecar `.workflow`. |
+| "update agents-init" / "upgrade this skill" / "pull latest skill" | Run self-update from GitHub, reinstall the skill, then optionally upgrade this project workflow. |
+| "recover this project" / "where are we" | Read `.workflow/current.yaml`, `task.yaml`, `open_threads.yaml`, `verification.yaml`, `thread_registry.yaml`. |
+| "check agents-init config" / "doctor" | Run workflow validation plus Maestro/Codex environment diagnosis. |
+| "pressure-test this skill" | Print pressure-test prompts and expected routes. |
+| "I do not know which command to use" / "help me decide the route" | Run route-intent and preserve matched signals in open threads. |
+| "register main thread" | Record the active main Codex thread id in `.workflow/thread_registry.yaml` when available. |
+| "I am fuzzy" / "I cannot express this clearly" | Restate goal, list uncertainty, ask at most 1-3 questions. |
+| "I am unhappy with the UI" | Create/update a UX issue first; do not jump straight to code. |
+| "analyze product/source/sample options" | Create/update a sample decision or research task with evidence boundaries. |
+| "multi-perspective review" / "PM/FDE review" | Use PM/FDE/UX/Data/Test views; synthesize into one task card or plan. |
+| "open worker" / "open Codex sub-session" / "parallel analysis" | Register worker in `thread_registry.yaml`, give one bounded task and receipt contract. |
+| "read worker receipt" / "ingest worker output" | Read worker output, accept/reject receipt, update workflow and verification. |
+| "use Maestro/Ralph" | Use only after the current gate and human pause points are clear. |
+| "ask Claude to challenge this" / "second model review" | Build a compact packet, smoke the route, capture raw output, and ingest a model receipt. |
+| "small clear task" | Execute directly with completion standard and verification. |
+| "save before compression" / "handoff to a new session" | Update current/task/open_threads/verification and write a recovery brief. |
 
 ## Route Intent Caveat
 

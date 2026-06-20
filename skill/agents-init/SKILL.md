@@ -79,6 +79,26 @@ Behavior is non-destructive:
 
 Use `-ApplyAgentEntry` only after reading the existing `AGENTS.md` and when the user asked to wire the project.
 
+## User-Facing Menu
+
+When the user asks "what can this skill do?", "menu", "help", "how do I use this", or selects the skill without a concrete request, show a short natural-language menu first. Do not force the user to memorize commands.
+
+```text
+Agents Init can help with:
+1. Init/adopt project: create or upgrade a recoverable .workflow.
+2. Recover context: report goal, gate, evidence, open issues, and next step.
+3. Clarify fuzzy intent: restate intent, find uncertainty, ask 1-3 upstream questions.
+4. Plan/blueprint: PM + FDE plan, old-project salvage, insertion plan.
+5. Workers: dispatch bounded Codex workers and ingest receipts.
+6. Maestro/Ralph: route lifecycle/delegate work after gates are clear.
+7. Claude/multi-model: build a compact packet, run a receipt-backed second view.
+8. UI/sample/image gate: require visible evidence and user acceptance.
+9. Self-update: pull latest agents-init and optionally upgrade this project.
+10. Save handoff: write recoverable state before compression or handoff.
+```
+
+If the user already gave a concrete intent, skip the menu and route the request.
+
 ## Reference Command Menu
 
 These are reference actions for the main agent. Do not present them as the primary user interface and do not require the user to memorize them:
@@ -108,14 +128,15 @@ These are reference actions for the main agent. Do not present them as the prima
 
 Natural language should route to the same actions. Examples:
 
-- "我说不清，但总觉得方向不对" -> `orchestrate -> clarify/grill`
-- "我很模糊" -> `grill`
-- "我不满意 UI" -> create/update `ux_issue.yaml`
-- "分析爆品和货源样本" -> `sample_decision` plus research task
-- "二开旧分支失败，重新做" -> `blueprint -> salvage -> insertion plan`
-- "开子会话分析" -> `dispatch-worker`
-- "压缩前保存状态" -> `save-state`
-- "小目标很清楚" -> `direct`
+- "I cannot explain it clearly, but the direction feels wrong" -> `orchestrate -> clarify/grill`
+- "I am fuzzy" -> `grill`
+- "I am unhappy with the UI" -> create/update `ux_issue.yaml`
+- "Analyze product/source/sample options" -> `sample_decision` plus research task
+- "The second-development branch failed; salvage the old project" -> `blueprint -> salvage -> insertion plan`
+- "Open sub-sessions to analyze separately" -> `dispatch-worker`
+- "Save state before compression" -> `save-state`
+- "This is a small clear task; do it directly" -> `direct`
+- "Update agents-init, then upgrade this project" -> `self-update -> optional project upgrade`
 
 `orchestrate` is the real decision loop. `route-intent` is advisory only. If multiple signals appear, use the first recommended route as the next gate but preserve all matched signals in open threads. For example, "UI 不满意 + 开子会话 + 分析爆品样本" normally starts with UI/sample acceptance clarification, then dispatches bounded workers.
 

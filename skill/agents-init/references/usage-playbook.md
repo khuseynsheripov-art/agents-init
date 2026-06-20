@@ -8,15 +8,17 @@ The user should not memorize commands. The main agent maps natural language to o
 
 | User Says | Main Agent Does |
 | --- | --- |
-| "先联系上下文，看我之前说过什么" | recover + bounded context search + cite anchors |
-| "找 Claude 帮我反驳这个方案" | create compact packet, run `cc2` one-shot, ingest model receipt |
-| "Claude 持续当架构 reviewer" | create/record bounded `cc2` continuous session with retire rule |
-| "开几个 Codex 会话分别看" | create/use Codex App one-shot or continuous role sessions |
-| "异步跑一下分析" | use Maestro delegate `--async` if route works, otherwise Codex worker or direct `cc2` one-shot |
-| "记录给团队/角色" | use Maestro `msg` as coordination ledger |
-| "这个规则以后都要记住" | memory point now, promote stable rule to Maestro spec/knowhow |
-| "不要一直堆文档/文档怎么维护" | run knowledge lifecycle: update, close, supersede, promote, index, archive |
-| "旧项目怎么融入" | recover + KG/search/code anchors + insertion plan before implementation |
+| "agents-init help" / "what can you do" | show the short natural-language menu, then route the actual task |
+| "connect the prior context first" | recover + bounded context search + cite anchors |
+| "update agents-init" / "upgrade this skill" | run self-update from GitHub, then optionally upgrade this project workflow |
+| "ask Claude to challenge this plan" | create compact packet, run `cc2` or proven Maestro delegate, ingest model receipt |
+| "keep Claude as architecture reviewer" | create/record bounded `cc2` continuous session with retire rule |
+| "open several Codex sessions" | create/use Codex App one-shot or continuous role sessions |
+| "run analysis async" | use Maestro delegate `--async` if route works, otherwise Codex worker or direct `cc2` one-shot |
+| "record this for the team/role" | use Maestro `msg` as coordination ledger |
+| "remember this rule for later" | memory point now, promote stable rule to Maestro spec/knowhow |
+| "stop piling up docs / maintain the docs" | run knowledge lifecycle: update, close, supersede, promote, index, archive |
+| "how should the old project fit in" | recover + KG/search/code anchors + insertion plan before implementation |
 
 ## Recommended Daily Pattern
 
@@ -118,10 +120,10 @@ Natural-language model routing:
 
 | User Says | Route |
 | --- | --- |
-| "Claude 用 opus / 4.8" | build packet, request `model_alias: opus`, capture receipt |
-| "Claude 省额度 / sonnet" | request `model_alias: sonnet` |
-| "持续 reviewer" | bounded resume session with max turns and close condition |
-| "不要 Claude" | skip model call and record why |
+| "Claude with opus / 4.8" | build packet, request `model_alias: opus`, capture receipt |
+| "Claude but save quota / sonnet" | request `model_alias: sonnet` |
+| "continuous reviewer" | bounded resume session with max turns and close condition |
+| "no Claude" | skip model call and record why |
 
 ## Maestro Role Config Later
 

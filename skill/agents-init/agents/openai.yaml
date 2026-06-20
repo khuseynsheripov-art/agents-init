@@ -1,7 +1,7 @@
 interface:
   display_name: "Agents Init"
-  short_description: "Init/adopt projects for agent workflows."
-  default_prompt: "Use $agents-init to initialize or adopt this project with my reusable agent workflow."
+  short_description: "Main-agent router for recoverable workflows, fuzzy intent, workers, Maestro/Claude, and project upgrades."
+  default_prompt: "Use Agents Init as the main-agent router. Show the short menu if I ask what it can do; otherwise recover context and route my request to init/adopt, upgrade, clarify, plan, worker, Maestro/Claude review, verification, or save-state as appropriate."
 
 policy:
   allow_implicit_invocation: true

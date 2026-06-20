@@ -1,6 +1,6 @@
 # Agents Init
 
-maestro 的强势外挂，目标是会用 Codex App 多会话 + Maestro 智能 + 多 CLI 非交互大模型。
+Agents Init is a main-agent router for recoverable project workflows: Codex App worker sessions, Maestro lifecycle/knowledge routing, and bounded non-interactive model reviews.
 
 This repository is the source of truth for the `agents-init` skill. The installed runtime copy lives under the user's Codex skills directory, for example:
 

@@ -74,6 +74,7 @@ $readCore = @(
 $lower = $Prompt.ToLowerInvariant()
 
 $patterns = [ordered]@{
+  menu = @('^\s*/?agents(-init)?\s*$', 'agents-init.*(menu|help)', '\bmenu\b', '\bhelp\b', 'what can.*agents-init.*do', 'how.*use.*agents-init', '\u600e\u4e48\u7528', '\u4f60\u80fd\u505a\u4ec0\u4e48', '\u5e2e\u6211\u770b\u600e\u4e48\u8d70', '\u6211\u4e0d\u77e5\u9053\u7528\u54ea\u4e2a\u547d\u4ee4')
   self_update = @('agents-init.*(self-update|update|upgrade)', '(self-update|update|upgrade).*agents-init', 'update.*skill', 'upgrade.*skill', 'skill.*\u66f4\u65b0', 'skill.*\u5347\u7ea7', 'skill.*\u65b0\u7248\u672c', 'pull.*latest.*agents-init', '\u66f4\u65b0.*agents-init', '\u5347\u7ea7.*agents-init', 'agents-init.*\u66f4\u65b0', 'agents-init.*\u5347\u7ea7')
   save = @('save-state', 'handoff', 'new session', 'compression', '\u538b\u7f29', '\u4ea4\u63a5', '\u65b0\u4f1a\u8bdd', '\u4fdd\u5b58\u72b6\u6001')
   recover = @('recover', 'where are we', 'current state', 'lost context', '\u6062\u590d', '\u73b0\u5728\u5230\u54ea', '\u5230\u54ea\u4e86', '\u4e0d\u8bb0\u5f97')
@@ -101,7 +102,17 @@ foreach ($name in $patterns.Keys) {
   }
 }
 
-if (Test-AnyPattern $lower $patterns['self_update']) {
+if (Test-AnyPattern $lower $patterns['menu']) {
+  $route = New-Route `
+    -Name 'menu -> route-intent' `
+    -Action 'Show the short natural-language Agents Init menu, then route the actual user request when provided.' `
+    -Gate 'T0_menu_or_intake' `
+    -Confidence 'high' `
+    -Reason 'Prompt asks what agents-init can do or how to use it.' `
+    -ReadFirst @('skill/agents-init/SKILL.md', '.workflow/agents-init.yaml') `
+    -Commands @("powershell -NoProfile -ExecutionPolicy Bypass -File `"$skillRoot\scripts\init-agents.ps1`" -ProjectPath `"$project`" -Mode menu") `
+    -MustNot @('Do not require the user to memorize commands.', 'Do not start implementation from a menu request.', 'After showing the menu, ask for or infer the actual task.')
+} elseif (Test-AnyPattern $lower $patterns['self_update']) {
   $route = New-Route `
     -Name 'self-update -> optional project upgrade' `
     -Action 'Pull latest agents-init from GitHub, reinstall the local skill, then upgrade and validate the named project workflow only when requested.' `

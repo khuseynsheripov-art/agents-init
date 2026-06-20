@@ -470,6 +470,27 @@ if ($Mode -eq 'menu') {
   $menu = [ordered]@{
     project = $project
     mode = 'menu'
+    natural_language_menu = @(
+      'Init/adopt project: create or upgrade a recoverable .workflow.',
+      'Recover context: report goal, gate, evidence, open issues, and next step.',
+      'Clarify fuzzy intent: restate intent, find uncertainty, ask 1-3 upstream questions.',
+      'Plan/blueprint: PM + FDE plan, old-project salvage, insertion plan.',
+      'Workers: dispatch bounded Codex workers and ingest receipts.',
+      'Maestro/Ralph: route lifecycle/delegate work after gates are clear.',
+      'Claude/multi-model: build a compact packet, run a receipt-backed second view.',
+      'UI/sample/image gate: require visible evidence and user acceptance.',
+      'Self-update: pull latest agents-init and optionally upgrade this project.',
+      'Save handoff: write recoverable state before compression or handoff.'
+    )
+    example_user_prompts = @(
+      'agents-init menu',
+      'Recover this project and report goal/gate/evidence/next action.',
+      'The direction feels wrong; recover context before asking questions.',
+      'This old project/worktree failed; do salvage and insertion plan first.',
+      'Update agents-init, then upgrade this project workflow.',
+      'Open two bounded workers to inspect logs and docs separately.',
+      'Ask Claude to challenge this plan, but recover context first.'
+    )
     state_files = [ordered]@{
       agents_init = Join-Path $project '.workflow\agents-init.yaml'
       current = Join-Path $project '.workflow\current.yaml'

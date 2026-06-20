@@ -7,23 +7,35 @@ This folder explains how this project should be developed with the user's reusab
 Use natural language. Exact commands are optional.
 
 ```text
-$agents-init recover 当前项目，告诉我 goal、gate、active task、open threads、证据和下一步。
+$agents-init menu
 ```
 
 ```text
-我这个需求很模糊。先复述你的理解，列出不确定点，最多问我 1-3 个问题，再落成 task card。
+agents-init help. Tell me what you can do for this project.
 ```
 
 ```text
-这是长任务。先用 PM/FDE/UX/Data/Test 多视角拆成 3-7 个可恢复子任务，不要直接实现。
+$agents-init recover this project and report goal, gate, active task, open threads, evidence, and next step.
 ```
 
 ```text
-这是旧项目/旧 worktree 二开失败。先做 blueprint、salvage、insertion plan，别直接写代码。
+This requirement is fuzzy. Restate your understanding, list uncertainty, ask at most 1-3 questions, then make a task card.
 ```
 
 ```text
-这是小目标，不需要 Maestro。直接做，但先说明完成标准和验证方式。
+This is a long task. Use PM/FDE/UX/Data/Test views and split it into 3-7 recoverable tasks before implementation.
+```
+
+```text
+This old project/worktree failed. Do blueprint, salvage, and insertion plan before writing code.
+```
+
+```text
+Update agents-init, then upgrade this project workflow.
+```
+
+```text
+This is a small clear task. Do it directly, but first state completion standard and verification.
 ```
 
 ## Operating Model
@@ -48,6 +60,7 @@ $agents-init register-main
 $agents-init dispatch-worker
 $agents-init ingest-receipt
 $agents-init route-maestro
+$agents-init self-update
 $agents-init save-state
 ```
 
