@@ -39,6 +39,7 @@ There are three separate layers:
 
 ```text
 Maestro CLI                      installed/upgraded by npm
+Claude / cc2 / Maestro delegate   configured and smoke-tested as a model route
 agents-init Codex skill           installed/upgraded from this git repo
 each business/test project         upgraded by the installed skill's init-agents.ps1
 ```
@@ -49,6 +50,42 @@ Maestro is a global CLI:
 npm install -g maestro-flow
 maestro --version
 ```
+
+Claude is a model route, not part of the skill package. There are two supported paths:
+
+```text
+direct cc2                 trusted capturable Claude review path when smoke-tested
+Maestro delegate to Claude  preferred later if raw output proves the adapter works
+```
+
+Direct `cc2` smoke:
+
+```powershell
+cc2 --version
+cc2 --safe-mode -p "agents-init Claude smoke. Reply with AGENTSINIT-CC2-SMOKE." --model opus --output-format json --no-session-persistence
+```
+
+Continue only when the next question needs the prior Claude context:
+
+```powershell
+cc2 --safe-mode -p "<follow-up>" --model opus --output-format json --resume "<session_id>"
+```
+
+Maestro delegate config and smoke:
+
+```powershell
+maestro config delegate show --json
+maestro delegate --to claude --mode analysis --cd "<project>" "Smoke test. Reply with AGENTSINIT-MAESTRO-CLAUDE-SMOKE."
+```
+
+Important rules:
+
+- request aliases such as `opus`, not hardcoded dated model names, unless the local tool requires a concrete model;
+- record the actual model from raw output in a receipt;
+- Maestro `completed` status is not enough. The raw delegate output must contain task-relevant Claude output;
+- if roles still map to Codex, Maestro is multi-role but not multi-model by default;
+- changing `<project>\.maestro\cli-tools.json` is project-local policy; changing `%USERPROFILE%\.maestro\cli-tools.json` is global policy and needs stronger confirmation;
+- if Claude expires, quota fails, or a profile changes, stop and report it. Do not silently switch accounts.
 
 `agents-init` is not an npm package. It is a Codex skill installed under:
 
