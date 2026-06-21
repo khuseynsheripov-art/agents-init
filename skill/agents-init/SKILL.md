@@ -24,6 +24,8 @@ For any non-trivial or context-referenced request, the main agent first runs thi
 
 Use heavy machinery only when the loop shows real need: old-project insertion, UI/sample/image/business gates, repeated correction, long-task recovery, multi-session conflict, or high-value multi-model review.
 
+For product/UI/workflow placement, run the Product-System Fit Gate before implementation. Surface complaints such as "new page", "panel", "menu", "not integrated", "feels disconnected", or "too narrow" are weak signals only; infer whether the real issue is product structure, workflow ownership, interaction grammar, object boundaries, or temporary sidecar drift.
+
 ## First Decision
 
 | Situation | Route |

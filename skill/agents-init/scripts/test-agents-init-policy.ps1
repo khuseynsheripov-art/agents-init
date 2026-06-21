@@ -99,6 +99,16 @@ Assert-True ($modelPolicyTemplate -match 'preferred_route: maestro_delegate_when
 $caseStudy = Read-Text (Join-Path $skillRoot 'references\case-studies\ozon-canvas.md')
 Assert-True ($caseStudy -match '/image mainline integration vs /canvas/ozon-suite sidecar drift') 'Ozon/Canvas case study must name the required first diagnosis exactly.'
 
+$painRules = Read-Text (Join-Path $skillRoot 'references\pain-point-rules.md')
+Assert-True ($painRules -match 'Product-System Fit Gate' -and $painRules -match 'surface symptom, not the decision' -and $painRules -match 'new projects') 'Pain point rules must define a general Product-System Fit Gate where surface words are weak signals, not routing truth.'
+Assert-True ($painRules -match 'Do not reduce "not a standalone page" to "move it into a panel"' -and $painRules -match 'product structure, workflow ownership, interaction grammar') 'Pain point rules must forbid shallow fixes that only move the surface without product-system analysis.'
+
+$mainOrchestration = Read-Text (Join-Path $skillRoot 'references\main-agent-orchestration.md')
+Assert-True ($mainOrchestration -match 'product_system_fit_gate' -and $mainOrchestration -match 'information architecture' -and $mainOrchestration -match 'interaction grammar') 'Main-agent orchestration must require product_system_fit_gate fields for UI/workflow/product-shape tasks.'
+
+$orchTemplate = Read-Text (Join-Path $skillRoot 'assets\project-template\.workflow\templates\orchestration_decision.yaml')
+Assert-True ($orchTemplate -match 'product_system_fit_gate:' -and $orchTemplate -match 'surface_symptoms:' -and $orchTemplate -match 'system_role_hypotheses:' -and $orchTemplate -match 'weak_signal_only: true') 'Orchestration decision template must include product_system_fit_gate with weak-signal surface symptoms.'
+
 $installScript = Read-Text (Join-Path $RepoRoot 'scripts\install-local.ps1')
 Assert-True ($installScript -match 'skill-backups' -and $installScript -match 'agents-init\.backup\.\*') 'install-local.ps1 must store or quarantine backups outside the skills discovery root.'
 Assert-True ($installScript -notmatch 'Join-Path\s+\$targetRoot\s+"agents-init\.backup\.\$stamp"') 'install-local.ps1 must not create discoverable agents-init.backup.* skill directories under the skills root.'

@@ -18,11 +18,12 @@ Before implementation on any non-trivial request:
 4. Extract semantic signals, not only keywords.
 5. Decide the current gate.
 6. Decide whether this needs clarification, Maestro/Ralph, Codex App workers, direct work, or human acceptance.
-7. Run or write the required multi-perspective review when the task is fuzzy, long-running, old-project, UI/sample/image, Maestro/Codex-App, or multi-model.
-8. If a user confirmation is needed, disclose the concrete consequence before asking: visible route/page, integration mode, workflow axis, rejected alternatives, and what remains unproven.
-9. Decide the knowledge lifecycle: update, close, supersede, promote to spec/knowhow, KG index/search, or archive.
-10. Record the decision in an orchestration decision artifact or task card.
-11. Only then dispatch work or implement.
+7. Run the Product-System Fit Gate when the task changes product shape, UI, workflow placement, or capability ownership.
+8. Run or write the required multi-perspective review when the task is fuzzy, long-running, old-project, UI/sample/image, Maestro/Codex-App, or multi-model.
+9. If a user confirmation is needed, disclose the concrete consequence before asking: visible route/page, integration mode, workflow axis, rejected alternatives, and what remains unproven.
+10. Decide the knowledge lifecycle: update, close, supersede, promote to spec/knowhow, KG index/search, or archive.
+11. Record the decision in an orchestration decision artifact or task card.
+12. Only then dispatch work or implement.
 
 ## Maintenance Evidence Is Not Intent
 
@@ -147,6 +148,30 @@ Decision consequence:
 - deferred: direct existing-surface integration and runtime adapter work.
 Question: Is that temporary sidecar acceptable, or should the plan return to an existing-surface integration path first?
 ```
+
+## Product-System Fit Gate
+
+Run `product_system_fit_gate` before implementation when the user is asking for a new capability, UI/workflow change, old-project insertion, or when surface complaints suggest the feature may not belong in the current product system. Typical surface symptoms include "standalone page", "new page", "panel", "menu", "entry", "not integrated", "feels disconnected", "not smooth", "too narrow", or "only moved the surface".
+
+These are weak signals only. Do not turn them into keyword routing. The main agent must infer the deeper issue and inspect the product system before proposing a fix.
+
+For existing projects, cite evidence about:
+
+- information architecture and page responsibilities;
+- menu, panel, toolbar, object-detail, assistant, import/export, and settings surfaces;
+- current data/object model and workflow ownership;
+- existing interaction grammar and visual/behavioral patterns;
+- capabilities that should be reused instead of forked.
+
+For new projects, define the planned product structure first:
+
+- primary task flow;
+- core objects and their detail surfaces;
+- page/panel/tool division;
+- where experiments or temporary workbenches may live;
+- what makes the first slice feel native rather than isolated.
+
+The gate must produce 2-3 `system_role_hypotheses`, such as main workflow, object detail, right panel, command/menu action, node/tool, project template, asset manager, review queue, import/export adapter, settings, or temporary workbench. Then choose the smallest next gate that proves product fit. Do not reduce "not a standalone page" to "move it into a panel"; that may still be a sidecar if the workflow, object model, or interaction grammar is not integrated.
 
 ## Semantic Signals
 

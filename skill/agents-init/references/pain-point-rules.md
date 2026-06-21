@@ -16,6 +16,7 @@ Use this reference when the user's request is fuzzy, long, UI-heavy, sample-heav
 | P8 | Main session can change | Register active/historical main thread state |
 | P9 | Model strengths differ | Route by role and proof requirement |
 | P10 | User wants to learn without heavy process | Direct mode for clear small tasks, gates for risky tasks |
+| P11 | Surface complaints hide product-system mismatch | Product-System Fit Gate before UI/workflow/product-shape implementation |
 
 ## Default Response To Fuzzy Input
 
@@ -33,6 +34,36 @@ If the user's fuzzy input references previous work, current pages, old audits, s
 8. Ask at most 1-3 confirmation questions, starting with the upstream contradiction.
 9. Create or update `.workflow/open_threads.yaml` and memory points when needed.
 10. Only then create the task card or blueprint.
+
+## Product-System Fit Gate
+
+Use this gate when a request involves UI, product shape, workflow placement, a new capability, old-project insertion, or a user repeatedly mentions a surface symptom such as a standalone page, a menu, a panel, an entry point, "feels disconnected", "not smooth", "does not fit", "too narrow", "not integrated", or "only moved the surface".
+
+These words are a surface symptom, not the decision. They are weak signals that the main agent must inspect product structure, workflow ownership, interaction grammar, data/object boundaries, and user task flow. Do not keyword-route them into a fixed solution.
+
+For old projects or second development:
+
+- audit the existing information architecture, page responsibilities, menu/panel/tool areas, object model, data flow, and interaction grammar before proposing where a new capability belongs;
+- identify whether the new capability should be a workflow, object detail, command, panel, node type, template, import/export path, settings surface, or temporary workbench;
+- separate temporary preview/workbench routes from the formal product path;
+- explain how the new capability cooperates with existing capabilities rather than only where it is placed.
+
+For new projects:
+
+- establish the product's information architecture, primary task flow, core objects, page/panel/tool division, and interaction grammar before building isolated features;
+- decide whether a requested feature belongs in the main workflow, assistant surface, object detail, batch tool, asset manager, review queue, settings, or experiment area;
+- avoid treating cards, dashboards, or standalone pages as a substitute for product structure.
+
+Do not reduce "not a standalone page" to "move it into a panel". The real question may be product structure, workflow ownership, interaction grammar, object boundaries, or whether the proposed feature is a sidecar rather than a native part of the system.
+
+The output of this gate should include:
+
+- `surface_symptoms`: what the user complained about, marked as weak-signal-only;
+- `deeper_product_system_issue`: the likely structural problem behind the surface complaint;
+- `system_role_hypotheses`: 2-3 possible roles for the capability in the product system;
+- `existing_or_planned_system_anchors`: evidence from current project files, UI, docs, or plans;
+- `temporary_vs_formal_path`: what is only a workbench/preview and what is the product path;
+- `first_confirmation`: one upstream question about product-system fit before downstream UI details.
 
 ## Confirmation Must Expose Consequences
 

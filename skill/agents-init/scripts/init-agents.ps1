@@ -491,6 +491,39 @@ decision_consequence_disclosure:
 "@
       $text = Add-TextBeforeMarker -Text $text -MarkerPattern '(?m)^\s*semantic_signals:\s*$' -InsertText $block
     }
+    if ($text -notmatch '(?m)^\s*product_system_fit_gate:\s*$') {
+      $block = @"
+product_system_fit_gate:
+  required: false
+  surface_symptoms:
+    weak_signal_only: true
+    examples:
+      - standalone_page | new_page | panel | menu | entry_point | disconnected | not_smooth | not_integrated | too_narrow | only_moved_surface
+    observed:
+      - ""
+  deeper_product_system_issue:
+    - product_structure | workflow_ownership | interaction_grammar | object_boundary | information_architecture | task_flow | capability_reuse | temporary_vs_formal_path | unclear
+  existing_or_planned_system_anchors:
+    - source: ""
+      proves:
+        - ""
+      does_not_prove:
+        - ""
+  system_role_hypotheses:
+    - role: main_workflow | object_detail | right_panel | menu_command | toolbar_tool | node_type | project_template | asset_manager | review_queue | import_export_adapter | settings | temporary_workbench | other
+      fit_reason: ""
+      risk: ""
+      evidence_needed: ""
+  temporary_vs_formal_path:
+    temporary_workbench:
+      - ""
+    formal_product_path:
+      - ""
+  first_confirmation: ""
+  status: not_needed | pending | completed | blocked
+"@
+      $text = Add-TextBeforeMarker -Text $text -MarkerPattern '(?m)^\s*recommended_route:\s*' -InsertText $block
+    }
     if ($text -notmatch '(?m)^\s*multi_perspective_review:\s*$') {
       $block = @"
 multi_perspective_review:
@@ -886,6 +919,7 @@ if ($Mode -eq 'orchestrate') {
       'root_diagnosis',
       'decision_consequence_disclosure',
       'semantic_signals',
+      'product_system_fit_gate',
       'current_gate',
       'recommended_route',
       'why_not_direct',

@@ -133,6 +133,13 @@ $tests = @(
     expected_route = 'visible evidence review plus human acceptance gate; state proves and does_not_prove'
     must_not = 'treat visible slice existence as UI, workflow, sample, generated image, or product acceptance'
     evidence = 'references/pain-point-rules.md and .workflow/templates/verification_receipt.yaml'
+  },
+  [ordered]@{
+    id = 'PT-PRODUCT-SYSTEM-001'
+    prompt = 'This new app feature feels disconnected and too narrow. I keep saying not a standalone page, but I do not know the exact UI shape yet.'
+    expected_route = 'Product-System Fit Gate: treat surface words as weak signals, define product structure/workflow ownership/interaction grammar hypotheses, then ask one upstream confirmation'
+    must_not = 'keyword-route "not standalone page" into "put it in a panel" or implement before product-system analysis'
+    evidence = 'references/pain-point-rules.md, references/main-agent-orchestration.md, and .workflow/templates/orchestration_decision.yaml'
   }
 )
 
