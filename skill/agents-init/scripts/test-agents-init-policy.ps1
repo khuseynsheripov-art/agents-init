@@ -99,6 +99,10 @@ Assert-True ($modelPolicyTemplate -match 'preferred_route: maestro_delegate_when
 $caseStudy = Read-Text (Join-Path $skillRoot 'references\case-studies\ozon-canvas.md')
 Assert-True ($caseStudy -match '/image mainline integration vs /canvas/ozon-suite sidecar drift') 'Ozon/Canvas case study must name the required first diagnosis exactly.'
 
+$installScript = Read-Text (Join-Path $RepoRoot 'scripts\install-local.ps1')
+Assert-True ($installScript -match 'skill-backups' -and $installScript -match 'agents-init\.backup\.\*') 'install-local.ps1 must store or quarantine backups outside the skills discovery root.'
+Assert-True ($installScript -notmatch 'Join-Path\s+\$targetRoot\s+"agents-init\.backup\.\$stamp"') 'install-local.ps1 must not create discoverable agents-init.backup.* skill directories under the skills root.'
+
 $initScript = Join-Path $skillRoot 'scripts\init-agents.ps1'
 $upgradeTestRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("agents-init-upgrade-test-" + [guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Force -Path (Join-Path $upgradeTestRoot '.workflow\templates') | Out-Null
