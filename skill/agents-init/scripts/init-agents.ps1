@@ -163,6 +163,94 @@ function Test-SuspiciousYamlDoubleQuote {
   return $Text -match '(?m):\s*"[^"\r\n]*""'
 }
 
+function Get-YamlScalarByKey {
+  param(
+    [Parameter(Mandatory = $true)][string]$Text,
+    [Parameter(Mandatory = $true)][string]$Key
+  )
+  $match = [regex]::Match($Text, '(?m)^(\s*' + [regex]::Escape($Key) + ':\s*)(.+?)\s*$')
+  if ($match.Success) {
+    return $match.Groups[2].Value.Trim()
+  }
+  return $null
+}
+
+function Set-YamlScalarByKey {
+  param(
+    [Parameter(Mandatory = $true)][string]$Text,
+    [Parameter(Mandatory = $true)][string]$Key,
+    [Parameter(Mandatory = $true)][string]$Value
+  )
+  return [regex]::Replace($Text, '(?m)^(\s*' + [regex]::Escape($Key) + ':\s*).+$', {
+    param($match)
+    $match.Groups[1].Value + $Value
+  }, 1)
+}
+
+function Copy-ManagedTemplateFile {
+  param(
+    [Parameter(Mandatory = $true)][string]$Project,
+    [Parameter(Mandatory = $true)][string]$Template,
+    [Parameter(Mandatory = $true)][string]$RelativePath
+  )
+
+  $source = Join-Path $Template $RelativePath
+  $dest = Join-Path $Project $RelativePath
+  if (-not (Test-Path -LiteralPath $source -PathType Leaf)) {
+    return $false
+  }
+
+  $parent = Split-Path -Parent $dest
+  if (-not (Test-Path -LiteralPath $parent -PathType Container)) {
+    New-Item -ItemType Directory -Path $parent -Force | Out-Null
+  }
+  Copy-Item -LiteralPath $source -Destination $dest -Force
+  return $true
+}
+
+function Refresh-AgentsInitControlPlane {
+  param(
+    [Parameter(Mandatory = $true)][string]$Project,
+    [Parameter(Mandatory = $true)][string]$Template
+  )
+
+  $relative = '.workflow\agents-init.yaml'
+  $source = Join-Path $Template $relative
+  $dest = Join-Path $Project $relative
+  if (-not (Test-Path -LiteralPath $source -PathType Leaf)) {
+    return $false
+  }
+
+  $old = if (Test-Path -LiteralPath $dest -PathType Leaf) { Get-Content -Raw -Encoding UTF8 -LiteralPath $dest } else { '' }
+  $text = Get-Content -Raw -Encoding UTF8 -LiteralPath $source
+
+  $preservedPurpose = Get-YamlScalarByKey -Text $old -Key 'purpose'
+  if ($preservedPurpose) {
+    $text = Set-YamlScalarByKey -Text $text -Key 'purpose' -Value $preservedPurpose
+  }
+
+  $preservedThread = Get-YamlScalarByKey -Text $old -Key 'active_thread_id'
+  if ($preservedThread) {
+    $text = Set-YamlScalarByKey -Text $text -Key 'active_thread_id' -Value $preservedThread
+  }
+
+  $preservedSource = Get-YamlScalarByKey -Text $old -Key 'source'
+  if ($preservedSource -and $preservedSource -ne 'placeholder') {
+    $text = Set-YamlScalarByKey -Text $text -Key 'source' -Value $preservedSource
+  }
+
+  $preservedStatus = Get-YamlScalarByKey -Text $old -Key 'status'
+  if ($preservedStatus) {
+    $text = Set-YamlScalarByKey -Text $text -Key 'status' -Value $preservedStatus
+  }
+
+  $parent = Split-Path -Parent $dest
+  if (-not (Test-Path -LiteralPath $parent -PathType Container)) {
+    New-Item -ItemType Directory -Path $parent -Force | Out-Null
+  }
+  return (Update-FileIfChanged -Path $dest -Text $text)
+}
+
 function Get-DefaultModelPolicyText {
   return @'
 updated_at: "<update-on-use>"
@@ -311,6 +399,45 @@ function Upgrade-AgentsInitV2 {
       }
       Copy-Item -LiteralPath $source -Destination $dest
       $createdLocal.Add($relative)
+    }
+  }
+
+  if (Refresh-AgentsInitControlPlane -Project $Project -Template $Template) {
+    $updated.Add('.workflow\agents-init.yaml')
+  }
+
+  $managedTemplateFiles = @(
+    '.workflow\templates\adoption_salvage_report.yaml',
+    '.workflow\templates\delegate_receipt.yaml',
+    '.workflow\templates\handoff_receipt.yaml',
+    '.workflow\templates\image_quality_review.yaml',
+    '.workflow\templates\model_review_receipt.yaml',
+    '.workflow\templates\multi_model_context_packet.md',
+    '.workflow\templates\multi_perspective_review.yaml',
+    '.workflow\templates\orchestration_decision.yaml',
+    '.workflow\templates\plan_pm_fde.yaml',
+    '.workflow\templates\sample_decision.yaml',
+    '.workflow\templates\session_recovery_brief.md',
+    '.workflow\templates\task_brief.yaml',
+    '.workflow\templates\ux_issue.yaml',
+    '.workflow\templates\verification_receipt.yaml',
+    '.workflow\templates\worker_receipt.yaml',
+    'docs\dev-os\command-intent-map.md',
+    'docs\dev-os\maestro-ralph-routing.md',
+    'docs\dev-os\multi-codex-session-mode.md',
+    'docs\dev-os\orchestration-loop.md',
+    'docs\dev-os\README.md',
+    'docs\dev-os\role-gates.md'
+  )
+
+  foreach ($relative in $managedTemplateFiles) {
+    $dest = Join-Path $Project $relative
+    $old = if (Test-Path -LiteralPath $dest -PathType Leaf) { Get-Content -Raw -Encoding UTF8 -LiteralPath $dest } else { '' }
+    if (Copy-ManagedTemplateFile -Project $Project -Template $Template -RelativePath $relative) {
+      $new = Get-Content -Raw -Encoding UTF8 -LiteralPath $dest
+      if ($old -ne $new -and -not $updated.Contains($relative)) {
+        $updated.Add($relative)
+      }
     }
   }
 

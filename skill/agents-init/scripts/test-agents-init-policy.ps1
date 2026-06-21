@@ -99,6 +99,76 @@ Assert-True ($modelPolicyTemplate -match 'preferred_route: maestro_delegate_when
 $caseStudy = Read-Text (Join-Path $skillRoot 'references\case-studies\ozon-canvas.md')
 Assert-True ($caseStudy -match '/image mainline integration vs /canvas/ozon-suite sidecar drift') 'Ozon/Canvas case study must name the required first diagnosis exactly.'
 
+$initScript = Join-Path $skillRoot 'scripts\init-agents.ps1'
+$upgradeTestRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("agents-init-upgrade-test-" + [guid]::NewGuid().ToString('N'))
+New-Item -ItemType Directory -Force -Path (Join-Path $upgradeTestRoot '.workflow\templates') | Out-Null
+New-Item -ItemType Directory -Force -Path (Join-Path $upgradeTestRoot 'docs\dev-os') | Out-Null
+try {
+  $badChar = [char]0x951F
+  @"
+protocol_version: 1
+purpose: "legacy project control plane"
+main_agent:
+  active_thread_id: "thread-keep-me"
+  source: user_provided
+  status: active
+interaction_menu:
+  recover:
+    trigger:
+      - "$badChar old mojibake"
+"@ | Set-Content -LiteralPath (Join-Path $upgradeTestRoot '.workflow\agents-init.yaml') -Encoding UTF8
+
+  @'
+id: ""
+user_words: ""
+recovered_state:
+  goal: ""
+recommended_route: direct | clarify | worker | maestro_delegate
+maestro_use:
+  needed: false
+  route: none | delegate | ralph | spec | knowhow
+codex_app_workers:
+  needed: false
+  worker_count: 0
+  tasks:
+    - task_id: ""
+      bounded_question: ""
+human_gates:
+  required:
+    - ""
+'@ | Set-Content -LiteralPath (Join-Path $upgradeTestRoot '.workflow\templates\orchestration_decision.yaml') -Encoding UTF8
+
+  @'
+# Old Orchestration Loop
+
+stale docs
+'@ | Set-Content -LiteralPath (Join-Path $upgradeTestRoot 'docs\dev-os\orchestration-loop.md') -Encoding UTF8
+
+  & powershell -NoProfile -ExecutionPolicy Bypass -File $initScript -ProjectPath $upgradeTestRoot -Mode upgrade | Out-Null
+  if ($LASTEXITCODE -ne 0) {
+    throw "Upgrade smoke command failed with exit code $LASTEXITCODE"
+  }
+
+  $upgradedAgents = Read-Text (Join-Path $upgradeTestRoot '.workflow\agents-init.yaml')
+  $upgradedDecision = Read-Text (Join-Path $upgradeTestRoot '.workflow\templates\orchestration_decision.yaml')
+  $upgradedDocs = Read-Text (Join-Path $upgradeTestRoot 'docs\dev-os\orchestration-loop.md')
+
+  Assert-True ($upgradedAgents -match 'protocol_version:\s*2') 'Upgrade must refresh .workflow/agents-init.yaml to protocol_version 2.'
+  Assert-True ($upgradedAgents -match 'active_thread_id:\s*"thread-keep-me"') 'Upgrade must preserve the project active_thread_id while refreshing managed agents-init.yaml content.'
+  Assert-True ($upgradedAgents.IndexOf($badChar) -lt 0) 'Upgrade must replace mojibake in managed agents-init.yaml content.'
+  Assert-True ($upgradedDecision -match 'route:\s*none \| delegate \| ralph \| spec \| knowhow \| search \| kg \| msg \| overlay') 'Upgrade must refresh stale orchestration decision template route options.'
+  Assert-True ($upgradedDecision -match 'lifecycle:\s*one_shot \| continuous') 'Upgrade must refresh stale Codex App worker lifecycle fields.'
+  Assert-True ($upgradedDocs -match 'Main Agent Orchestration Loop' -and $upgradedDocs -match 'retrieve anchors before asking questions') 'Upgrade must refresh managed docs/dev-os files, not leave stale old docs.'
+} finally {
+  if (Test-Path -LiteralPath $upgradeTestRoot -PathType Container) {
+    $resolvedTmp = (Resolve-Path -LiteralPath $upgradeTestRoot).Path
+    $tmpBase = [System.IO.Path]::GetTempPath()
+    if ($resolvedTmp.StartsWith($tmpBase, [System.StringComparison]::OrdinalIgnoreCase)) {
+      Remove-Item -LiteralPath $resolvedTmp -Recurse -Force
+    }
+  }
+}
+
 if (Test-Path -LiteralPath (Join-Path $SampleProject '.workflow\current.yaml') -PathType Leaf) {
   $sampleCurrent = Read-Text (Join-Path $SampleProject '.workflow\current.yaml')
   Assert-True ($sampleCurrent -match '/image' -and $sampleCurrent -match '/canvas/ozon-suite' -and $sampleCurrent -match 'sidecar') 'Sample workflow current.yaml must foreground /image mainline vs /canvas/ozon-suite sidecar drift.'
