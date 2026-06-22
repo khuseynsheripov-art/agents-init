@@ -116,6 +116,14 @@ State files are working memory, not a history dump:
 
 An orchestration decision must say which layer is updated. If it only says "write another summary", the maintenance step is incomplete.
 
+## Document Triage Receipt
+
+When documents are unfinished, decisions changed mid-conversation, receipts are scattered, or old plans still look active, classify each artifact before writing more. Use `.workflow/templates/document_lifecycle_receipt.yaml` or an equivalent compact note.
+
+Every triaged artifact is one of: active, unresolved, superseded, archived, promoted, or rejected. The receipt must name active claims, unresolved questions, superseded-by target, promotion target, restore or trace reference, proves, does_not_prove, and next action.
+
+Do not append another summary when the real task is knowledge cleanup. First classify artifacts, move unresolved questions into `open_threads.yaml`, add or supersede atomic memory points, promote stable rules to spec/knowhow, archive raw receipts with restore pointers, and update `current.yaml`/`task.yaml` to the current truth.
+
 ## Compression Recovery Output
 
 Before compression or handoff, write a short recovery brief with:

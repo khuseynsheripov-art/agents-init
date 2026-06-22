@@ -2,6 +2,8 @@
 .workflow/
 !skill/agents-init/assets/project-template/.workflow/
 !skill/agents-init/assets/project-template/.workflow/**
+!agents-init-template/.workflow/
+!agents-init-template/.workflow/**
 .tmp/
 
 # Local Maestro knowledge/runtime state

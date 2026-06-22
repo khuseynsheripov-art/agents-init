@@ -1,0 +1,129 @@
+protocol_version: 1
+updated_at: "<update-on-use>"
+
+purpose: "Project-local control plane for Agents Init orchestration."
+
+main_agent:
+  active_thread_id: current
+  source: placeholder
+  status: active
+  responsibilities:
+    - clarify_requirements
+    - select_gate
+    - route_maestro_or_worker_or_direct
+    - dispatch_bounded_workers
+    - ingest_worker_receipts
+    - update_workflow_state
+    - maintain_open_threads
+    - decide_final_acceptance
+  must_not_delegate:
+    - product_direction
+    - UI_acceptance
+    - generated_image_quality_acceptance
+    - sample_selection_acceptance
+    - external_write_or_publish_approval
+
+interaction_menu:
+  recover:
+    trigger:
+      - "$agents-init recover"
+      - "恢复当前项目"
+      - "当前到哪了"
+    action: "Read .workflow and report gate, evidence, unanswered points, next action."
+  grill:
+    trigger:
+      - "$agents-init grill"
+      - "grill me"
+      - "我很模糊"
+    action: "Restate goal, list uncertainty, ask at most 1-3 questions, then draft a task card."
+  brainstorm:
+    trigger:
+      - "$agents-init brainstorm"
+      - "多角度分析"
+    action: "Use PM/FDE/UX/Data/Test views and synthesize."
+  register_main:
+    trigger:
+      - "$agents-init register-main"
+      - "注册主会话"
+    action: "Write the active Codex thread id to thread_registry when available."
+  dispatch_worker:
+    trigger:
+      - "$agents-init dispatch-worker"
+      - "开子会话"
+      - "派 worker"
+    action: "Register one bounded worker and send a receipt-based prompt."
+  ingest_receipt:
+    trigger:
+      - "$agents-init ingest-receipt"
+      - "读取 worker 回执"
+    action: "Read worker receipt, accept/reject, update workflow and verification."
+  route_maestro:
+    trigger:
+      - "$agents-init route-maestro"
+      - "用 Maestro"
+      - "用 Ralph"
+    action: "Choose direct, worker, Maestro, or Ralph based on current gate."
+  save_state:
+    trigger:
+      - "$agents-init save-state"
+      - "压缩前保存"
+    action: "Update current/task/open_threads/verification and recovery brief."
+
+roles:
+  main_agent:
+    decides: [gate, task_order, acceptance_status, next_action]
+  PM:
+    focus: [user_value, acceptance, scope, non_goals]
+  FDE:
+    focus: [data_contract, interfaces, failure_states, rollback, recovery]
+  UX_UI:
+    focus: [visible_workflow, screenshots, interaction, user_acceptance]
+  Data_Research:
+    focus: [samples, evidence, source_boundaries, matrix]
+  QA_Verifier:
+    focus: [tests, browser_smoke, proves, does_not_prove]
+  Worker:
+    focus: [one_bounded_task]
+    cannot_decide: [product_direction, final_acceptance]
+
+routing:
+  direct:
+    use_when: "Small clear local task with known acceptance and low product risk."
+    output: "Patch or answer plus verification."
+  grill:
+    use_when: "Fuzzy requirement, UI dissatisfaction, product direction uncertainty."
+    output: "Clarified task card and open questions."
+  brainstorm:
+    use_when: "Need multiple perspectives before plan."
+    output: "Synthesis with PM/FDE/UX/Data/Test notes."
+  worker:
+    use_when: "Independent bounded analysis, implementation, verification, or document triage."
+    output: "Worker receipt and artifact."
+  maestro:
+    use_when: "Clear repeatable workflow step where a command chain helps."
+    output: "Workflow result summarized into .workflow."
+  ralph:
+    use_when: "Clear long lifecycle with gates already defined."
+    output: "Stage receipt; must pause at human gates."
+
+human_gates:
+  - fuzzy_product_direction
+  - UI_UX_acceptance
+  - sample_selection
+  - generated_image_quality
+  - export_or_publish_claims
+  - external_write_actions
+
+worker_policy:
+  default_lifecycle: disposable
+  durable_allowed_when: "Repeated bounded work in one domain, with one receipt per task."
+  close_policy: "Archive or close disposable worker after receipt is ingested when tools allow it."
+  receipt_required: true
+  receipt_template: .workflow/templates/worker_receipt.yaml
+
+state_files:
+  current: .workflow/current.yaml
+  task: .workflow/task.yaml
+  open_threads: .workflow/open_threads.yaml
+  verification: .workflow/verification.yaml
+  thread_registry: .workflow/thread_registry.yaml

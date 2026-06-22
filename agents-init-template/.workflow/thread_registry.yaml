@@ -1,0 +1,25 @@
+protocol_version: 1
+updated_at: "<update-on-use>"
+
+main_thread:
+  id: current
+  role: main_agent_orchestrator
+  owns:
+    - user_confirmation_gates
+    - task_order
+    - .workflow/current.yaml
+    - .workflow/task.yaml
+    - .workflow/open_threads.yaml
+    - .workflow/verification.yaml
+  status: active
+
+workers: []
+
+receipt_template: .workflow/templates/worker_receipt.yaml
+
+rules:
+  - Main agent decides product direction; workers do not.
+  - Every worker gets one bounded question and one expected artifact.
+  - Worker output must include evidence, open_threads, does_not_prove, and next.
+  - Main agent must read receipts and update .workflow before continuing.
+  - Codex App thread IDs may be added when thread tools are used.

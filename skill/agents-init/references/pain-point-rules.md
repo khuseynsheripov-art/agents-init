@@ -56,6 +56,8 @@ For new projects:
 
 Do not reduce "not a standalone page" to "move it into a panel". The real question may be product structure, workflow ownership, interaction grammar, object boundaries, or whether the proposed feature is a sidecar rather than a native part of the system.
 
+Do not confuse placement with integration. A feature is integrated only when its object ownership, workflow ownership, reused capabilities, data/state lifecycle, interaction grammar, and acceptance surface are native to the product. A button in global navigation, a topbar action, a right panel, or a route can still be a sidecar if it bypasses those contracts.
+
 The output of this gate should include:
 
 - `surface_symptoms`: what the user complained about, marked as weak-signal-only;
@@ -63,7 +65,17 @@ The output of this gate should include:
 - `system_role_hypotheses`: 2-3 possible roles for the capability in the product system;
 - `existing_or_planned_system_anchors`: evidence from current project files, UI, docs, or plans;
 - `temporary_vs_formal_path`: what is only a workbench/preview and what is the product path;
+- `integration_fit`: which surface level is claimed, which tempting levels are rejected, what owns the object/workflow/data, what existing capability is reused, and what proves this is not merely moved placement;
 - `first_confirmation`: one upstream question about product-system fit before downstream UI details.
+
+Directionally correct summaries are not enough. If the answer only says "use the existing page", "put it in the right panel", "reuse the old workflow", or "do not keep the sidecar", mark the gate incomplete unless it also provides:
+
+- concrete original product anchors from files, routes, screenshots, docs, browser state, or existing plans;
+- the native interaction grammar the capability must follow;
+- a capability reuse plan that avoids a parallel implementation path;
+- candidate insertion points with evidence, fit reason, and risk;
+- the first visible slice and what it proves/does not prove;
+- a debate or worker receipt when multi-model or worker analysis was invoked.
 
 ## Confirmation Must Expose Consequences
 

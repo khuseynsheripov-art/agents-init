@@ -1,0 +1,47 @@
+project: "<fill-project-name>"
+status: initialized
+updated_at: "<update-on-use>"
+mode: init
+
+mission: "<one sentence user value>"
+current_gate: intake
+
+current_authority:
+  rules: AGENTS.md
+  task: .workflow/task.yaml
+  open_threads: .workflow/open_threads.yaml
+  verification: .workflow/verification.yaml
+  thread_registry: .workflow/thread_registry.yaml
+  dev_os:
+    - docs/dev-os/README.md
+    - docs/dev-os/command-intent-map.md
+    - docs/dev-os/role-gates.md
+
+read_first:
+  - .workflow/current.yaml
+  - .workflow/task.yaml
+  - .workflow/open_threads.yaml
+  - .workflow/verification.yaml
+  - .workflow/thread_registry.yaml
+  - docs/dev-os/README.md
+  - docs/dev-os/command-intent-map.md
+  - docs/dev-os/role-gates.md
+
+next_action: "Main agent should inspect the project, classify whether this is init/adopt/recover, and update this file."
+
+open_questions: []
+
+forbidden_claims:
+  - "done without verification"
+  - "UI accepted without user-visible evidence"
+  - "generated image accepted without user acceptance"
+  - "external write/publish completed without explicit approval"
+
+compression_recovery:
+  response_required:
+    - recovered_goal
+    - current_gate
+    - active_task
+    - open_threads
+    - evidence
+    - next_action

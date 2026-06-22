@@ -50,6 +50,8 @@ obsolete direction -> superseded, not active
 
 When the user says a task "lost context", "I said this before", "this direction changed", or "documents are piling up", the main agent should maintain the layers immediately before proposing more work.
 
+Use a Document Triage Receipt when decisions changed mid-conversation, documents are unfinished, or old receipts/plans are scattered. The main agent must first classify artifacts as active, unresolved, superseded, archived, promoted, or rejected; then update `.workflow` and archive/promote the evidence. Do not create a new summary that leaves the old documents looking equally active.
+
 ## Keep V2 Simple
 
 For the next iteration, do not make the user configure a full multi-model role network.

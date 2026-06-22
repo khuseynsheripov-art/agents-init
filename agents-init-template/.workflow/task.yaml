@@ -1,0 +1,17 @@
+active_task: null
+queue: []
+
+task_card_template:
+  id: "<T1>"
+  status: pending
+  user_value: ""
+  scope: ""
+  out_of_scope: []
+  acceptance:
+    - ""
+  verification:
+    - ""
+  owner: main_agent
+  can_delegate: false
+  dependencies: []
+  evidence: []

@@ -31,6 +31,42 @@ Maestro does not replace:
 | Maestro overlay | Need non-invasive guardrails or workflow patches | Overlay purpose, target, rollback path |
 | Maestro composer/player | Repeatable workflow should become a template | User-accepted workflow template and checkpoints |
 
+## Project-Level Maestro Codex Skills
+
+There are two Maestro surfaces that must not be mixed:
+
+| Surface | Examples | What It Proves | What It Does Not Prove |
+| --- | --- | --- | --- |
+| CLI knowledge surfaces | `maestro search`, `maestro spec`, `maestro knowhow`, `maestro kg`, `maestro msg`, `maestro overlay` | local knowledge, registry, graph, message, or config anchors were retrieved | a Codex skill such as `maestro-grill` actually ran |
+| Codex skill invocation surfaces | project `.codex/skills/maestro-grill/SKILL.md`, `maestro-next/SKILL.md`, `maestro-ralph/SKILL.md` | the main agent loaded a project skill contract and can apply it in-context | the user accepted product direction or a human gate |
+
+Project-level Maestro Codex skills are discovered through:
+
+```powershell
+maestro ralph skills --platform codex --json
+```
+
+After discovery, the main agent must read the selected project skill `SKILL.md` and apply that skill's instructions in the current coordinator context when the gate allows it. `maestro grill` is not a CLI proof for `maestro-grill`; if it only prints generic Maestro CLI help, record that as evidence that the Codex skill is not a standalone Maestro CLI command.
+
+For prompts such as "use Maestro Grill/knowledge/KG" the correct sequence is:
+
+1. Recover `.workflow` and active gates.
+2. Use CLI knowledge surfaces such as `search`, `spec`, `knowhow`, or `kg` for anchors.
+3. Verify project skill availability with the Codex registry.
+4. Read the selected project skill `SKILL.md`.
+5. Perform one bounded in-context skill action, or block with the human gate/unsupported transport reason.
+6. Write a receipt with commands/files read, artifacts, `proves`, and `does_not_prove`.
+
+Minimum accepted live smoke:
+
+- recovered project state is named;
+- CLI knowledge anchors are captured or their failure is recorded;
+- read selected project skill `SKILL.md`;
+- one bounded skill action or explicit blocked decision is recorded;
+- receipt with proves and does_not_prove is ingested by the main agent.
+
+Registry enumeration alone is insufficient. A recommendation from `maestro-next --dry-run`, a file existence check, or a `completed`/`meta` status without a read skill contract and receipt only proves discovery, not orchestration.
+
 ## Knowledge And Context Routing
 
 Use Maestro knowledge surfaces before external search when the question is about local or previously learned project context:

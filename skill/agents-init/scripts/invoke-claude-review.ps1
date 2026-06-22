@@ -5,7 +5,7 @@ param(
 
   [string]$Task,
 
-  [ValidateSet('analysis', 'review', 'plan', 'brainstorm')]
+  [ValidateSet('analysis', 'review', 'plan', 'brainstorm', 'write')]
   [string]$Mode = 'analysis',
 
   [string]$ExpectedToken = '',
@@ -99,6 +99,10 @@ if (-not $providedExecId) {
 
 $launchExitCode = 0
 $launchText = ''
+$delegateMode = switch ($Mode) {
+  'write' { 'write' }
+  default { 'analysis' }
+}
 if ($providedExecId) {
   $launchText = 'inspect_existing_exec_id'
 } else {
@@ -106,7 +110,7 @@ if ($providedExecId) {
     $timeoutMs = [Math]::Max(1000, $TimeoutSeconds * 1000)
     $launch = Invoke-CapturedCommand `
       -FilePath 'maestro' `
-      -Arguments @('delegate', '--to', 'claude', '--mode', $Mode, '--cd', $project, '--id', $ExecId, '--timeout', ([string]$timeoutMs), $Task) `
+      -Arguments @('delegate', '--to', 'claude', '--mode', $delegateMode, '--cd', $project, '--id', $ExecId, '--timeout', ([string]$timeoutMs), $Task) `
       -WorkingDirectory $project
     $launchExitCode = $launch.exit_code
     $launchText = $launch.text
@@ -186,6 +190,7 @@ $result = [ordered]@{
   project = $project
   route = 'maestro_delegate_explicit_to_claude'
   mode = $Mode
+  delegate_mode = $delegateMode
   command = 'maestro delegate --to claude --mode <mode> --cd <project> --id <execId> <task>; maestro delegate output <execId>'
   exec_id = $execId
   delegate_exit_code = $launchExitCode

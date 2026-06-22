@@ -29,6 +29,10 @@ worker_lifecycle:
     - registered
     - sent
     - active
+    - running
+    - no_output
+    - interrupted
+    - restarted
     - receipt_returned
     - receipt_accepted
     - receipt_rejected
@@ -37,8 +41,12 @@ worker_lifecycle:
   allowed_transitions:
     proposed: [registered, blocked]
     registered: [sent, active, blocked, archived]
-    sent: [active, receipt_returned, blocked]
-    active: [receipt_returned, blocked]
+    sent: [active, running, receipt_returned, no_output, blocked]
+    active: [running, receipt_returned, no_output, interrupted, blocked]
+    running: [receipt_returned, no_output, interrupted, blocked]
+    no_output: [restarted, blocked, archived]
+    interrupted: [restarted, blocked, archived]
+    restarted: [sent, active, running, blocked]
     receipt_returned: [receipt_accepted, receipt_rejected, blocked]
     receipt_accepted: [archived]
     receipt_rejected: [registered, archived, blocked]
@@ -52,6 +60,8 @@ rules:
   - Main agent decides product direction; workers do not.
   - Every worker gets one bounded question and one expected artifact.
   - Worker output must include evidence, open_threads, does_not_prove, and next.
+  - Started workers or delegates are not analysis evidence until a raw receipt is returned and ingested.
+  - no_output/interrupted/restarted records require close_reason and next_action before the main agent may count the task as handled.
   - Main agent must read receipts and update .workflow before continuing.
   - Codex App thread IDs may be added when thread tools are used.
 
@@ -73,6 +83,9 @@ worker_record_template:
   status: registered
   receipt_status: pending
   receipt_path: ""
+  close_reason: ""
+  no_output_since: ""
+  restart_of: ""
   accepted_by_main_at: ""
   archive_required: true
   role_notes_path: ""

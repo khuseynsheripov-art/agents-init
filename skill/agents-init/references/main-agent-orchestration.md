@@ -173,6 +173,74 @@ For new projects, define the planned product structure first:
 
 The gate must produce 2-3 `system_role_hypotheses`, such as main workflow, object detail, right panel, command/menu action, node/tool, project template, asset manager, review queue, import/export adapter, settings, or temporary workbench. Then choose the smallest next gate that proves product fit. Do not reduce "not a standalone page" to "move it into a panel"; that may still be a sidecar if the workflow, object model, or interaction grammar is not integrated.
 
+For integration claims, use Product-System Fit as an Integration Fit Gate. Do not create a separate gate unless a project already has a local term for it. Integration means native participation in the product's task flow, object model, data lifecycle, interaction grammar, capability reuse path, and acceptance surface. Placement is only the visible expression.
+
+Distinguish surface levels before proposing UI:
+
+| Surface Level | Meaning | Common False Integration |
+| --- | --- | --- |
+| `global_nav` | Cross-product destination or module switcher. | Adding a top-level entry and calling it integrated. |
+| `first_level_workspace` | A primary workbench with its own task flow. | Building another workbench when the user asked for existing workflow integration. |
+| `project_list` | Create, open, import, export, or manage projects. | Treating project discovery as editor-native behavior. |
+| `object_detail` | Properties/history/actions for one business object. | Hiding workflow creation in a detail page without ownership. |
+| `editor_topbar` | Current document/canvas/workspace commands and mode/status. | Putting complex global setup in a toolbar button. |
+| `editor_internal_panel` | Contextual workflow, parameters, assistant, or selected-object side panel. | Moving a sidecar into a panel while data and state still bypass the editor. |
+| `node_or_canvas_object` | Local actions on selected objects/nodes/canvas elements. | Triggering cross-project side effects from a local node action. |
+| `command_or_menu` | Discoverable action within an existing task context. | Adding a command with no object/data contract. |
+| `settings_or_asset_library` | Reusable assets, preferences, templates, credentials, or shared resources. | Treating configuration/storage as the main workflow. |
+| `adapter` | Import/export/bridge between systems. | Calling a bridge the product surface before the native path exists. |
+
+For each candidate surface, state `scope`, `object_owner`, `workflow_owner`, `state_lifetime`, `entry_frequency`, `data_contract`, `failure_or_rollback`, and `visible_acceptance`. If these are unknown, mark the fit blocked or ask one upstream question.
+
+## Correct Direction Is Not Enough
+
+For product-system fit failures, a directionally correct answer can still fail. Saying "this should integrate into the existing editor", "make it a right panel", or "do not keep the workbench as final" is only a hypothesis until it is tied to evidence and an acceptance gate.
+
+The main agent must not treat a summary of product principles as a completed analysis. For UI/workflow/product-shape work, require `evidence_bound_product_fit` before moving to implementation or asking for final confirmation:
+
+| Field | Required Meaning |
+| --- | --- |
+| `original_product_anchors` | Files, routes, screenshots, docs, or browser evidence that show how the current product is organized. |
+| `native_interaction_grammar` | The existing menu, panel, toolbar, object detail, assistant, node/tool, or workflow patterns that the new capability must follow. |
+| `capability_reuse_plan` | Which existing generation, asset, import/export, node, API, or workflow capability is reused instead of forked. |
+| `candidate_insertion_points` | 2-3 possible places the capability could live, with fit reason, risk, and evidence still needed. |
+| `integration_fit` | Target surface level, rejected surface levels, native entry point, object/workflow owners, data contract, reused capabilities, anti-sidecar checks, and first slice proof. |
+| `first_visible_slice_acceptance` | What the user will see first, how it proves native fit, and what it does not prove. |
+| `design_debate_receipt` | A receipt or compact trace showing model/worker objections, accepted/rejected points, and main-agent synthesis when Claude/workers were used. |
+
+Mark `summary_only_failure: true` when the answer only restates a correct direction without these fields. In that case, do not proceed as if the gate passed. Re-run context retrieval, inspect project anchors, and ask one upstream confirmation about the product-system fit.
+
+This rule applies to old projects and new projects. In old projects it prevents sidecar drift. In new projects it prevents isolated pages/cards from substituting for a coherent product structure.
+
+## User-Visible Product-System Receipt
+
+When the user is confused about whether a proposal is the old analysis, a new page, a workbench, or integration into an existing surface, the main agent must show a compact receipt in the reply. A plain prose answer is not enough, even if the direction is right.
+
+Required compact shape:
+
+```text
+Recovered anchors:
+- <source>: proves <claim>
+- <source>: does_not_prove <boundary>
+
+Root diagnosis:
+- recovered_mainline: <old intended chain>
+- current_artifact: <current page/workbench/proposal>
+- contradiction: <why the artifact may drift or why it is only a workbench>
+
+Product-System Fit:
+- status: passed | blocked | summary_only_failure
+- native surface: <route/panel/tool/object/workflow>
+- reuse plan: <existing capability reused>
+- first visible slice: <what user sees first>
+- does_not_prove: <acceptance/export/final fit still blocked>
+
+Question:
+- <one upstream confirmation>
+```
+
+If the agent can only say "not a new page, use `/canvas/[id]` with a right panel" without this receipt, mark the response as `summary_only_failure`. That response can be a clarification draft, but it does not prove the integration system succeeded.
+
 ## Semantic Signals
 
 Treat these meanings as signals even when the exact words are absent:

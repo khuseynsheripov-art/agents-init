@@ -1,0 +1,13 @@
+open_threads: []
+
+template:
+  id: "<Q1>"
+  status: open
+  question: ""
+  why_it_matters: ""
+  owner: user | main_agent | worker
+  blocks:
+    - ""
+  evidence:
+    - ""
+  next: ""

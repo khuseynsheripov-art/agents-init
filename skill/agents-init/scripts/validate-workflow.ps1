@@ -46,6 +46,69 @@ function Test-LikelyMojibake {
   return $false
 }
 
+function Test-TextFileEncoding {
+  param(
+    [Parameter(Mandatory = $true)][string]$Path,
+    [Parameter(Mandatory = $true)][string]$Relative
+  )
+  if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) {
+    return
+  }
+
+  $bytes = [System.IO.File]::ReadAllBytes($Path)
+  if ($bytes.Length -ge 3 -and $bytes[0] -eq 0xEF -and $bytes[1] -eq 0xBB -and $bytes[2] -eq 0xBF) {
+    Add-Issue -Level 'warning' -Message "$Relative has UTF-8 BOM; normalize to BOM-less UTF-8 for stricter parsers and byte-level tests." -File $Relative
+  }
+  if ($bytes.Length -ge 2 -and (($bytes[0] -eq 0xFF -and $bytes[1] -eq 0xFE) -or ($bytes[0] -eq 0xFE -and $bytes[1] -eq 0xFF))) {
+    Add-Issue -Level 'warning' -Message "$Relative appears to use UTF-16 BOM; normalize workflow text files to UTF-8." -File $Relative
+  }
+  if ($bytes -contains 0) {
+    Add-Issue -Level 'warning' -Message "$Relative contains NUL bytes; workflow text files should be plain UTF-8 text." -File $Relative
+  }
+
+  try {
+    $strictUtf8 = [System.Text.UTF8Encoding]::new($false, $true)
+    $text = $strictUtf8.GetString($bytes)
+  } catch {
+    Add-Issue -Level 'error' -Message "$Relative is not valid UTF-8." -File $Relative
+    return
+  }
+
+  $crlfCount = [regex]::Matches($text, "\r\n").Count
+  $lfOnlyCount = [regex]::Matches($text, "(?<!\r)\n").Count
+  if ($crlfCount -gt 0 -and $lfOnlyCount -gt 0) {
+    Add-Issue -Level 'warning' -Message "$Relative has mixed line endings (CRLF=$crlfCount, LF-only=$lfOnlyCount); normalize before using strict diff or YAML tooling." -File $Relative
+  }
+
+  $badInvisible = [char[]]@([char]0x200B, [char]0x200C, [char]0x200D, [char]0xFEFF, [char]0x202A, [char]0x202B, [char]0x202C, [char]0x202D, [char]0x202E, [char]0x00A0, [char]0x00AD)
+  foreach ($ch in $badInvisible) {
+    if ($text.IndexOf($ch) -ge 0) {
+      Add-Issue -Level 'warning' -Message ("$Relative contains invisible or control character U+{0:X4}." -f [int][char]$ch) -File $Relative
+      break
+    }
+  }
+}
+
+function Test-WorkflowTextFile {
+  param([Parameter(Mandatory = $true)][System.IO.FileInfo]$File)
+  $textExtensions = @(
+    '.yaml',
+    '.yml',
+    '.md',
+    '.txt',
+    '.json',
+    '.jsonl',
+    '.ps1',
+    '.py',
+    '.js',
+    '.ts',
+    '.tsx',
+    '.css',
+    '.html'
+  )
+  return $textExtensions -contains $File.Extension.ToLowerInvariant()
+}
+
 function Remove-NegativeEvidenceBlocks {
   param([string]$Text)
   if (-not $Text) {
@@ -67,6 +130,33 @@ function Add-Issue {
     message = $Message
     file = $File
   }
+}
+
+function Get-TopLevelListBlocks {
+  param([string]$Text)
+  if (-not $Text) {
+    return @()
+  }
+  $blocks = New-Object System.Collections.Generic.List[string]
+  foreach ($match in [regex]::Matches($Text, '(?ms)^-\s+\S.*?(?=^-\s+\S|\z)')) {
+    $blocks.Add($match.Value)
+  }
+  return @($blocks)
+}
+
+function Get-YamlBlock {
+  param(
+    [string]$Text,
+    [string]$Key
+  )
+  if (-not $Text) {
+    return ''
+  }
+  $match = [regex]::Match($Text, "(?ms)^\s*$([regex]::Escape($Key)):\s*\r?\n(?<block>(?:^\s+.*\r?\n?)*)")
+  if ($match.Success) {
+    return $match.Groups['block'].Value
+  }
+  return ''
 }
 
 if (-not (Test-Path -LiteralPath $ProjectPath -PathType Container)) {
@@ -99,6 +189,10 @@ $requiredFiles = @(
   '.workflow/templates/multi_model_context_packet.md',
   '.workflow/templates/model_review_receipt.yaml',
   '.workflow/templates/multi_perspective_review.yaml',
+  '.workflow/templates/design_debate_receipt.yaml',
+  '.workflow/templates/document_lifecycle_receipt.yaml',
+  '.workflow/templates/plan_pm_fde.yaml',
+  '.workflow/templates/session_recovery_brief.md',
   'docs/dev-os/command-intent-map.md',
   'docs/dev-os/multi-codex-session-mode.md'
 )
@@ -107,6 +201,16 @@ foreach ($relative in $requiredFiles) {
   $path = Join-Path $project $relative
   if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
     Add-Issue -Level 'error' -Message "Missing required workflow file: $relative" -File $relative
+  }
+}
+
+if (Test-Path -LiteralPath $workflow -PathType Container) {
+  $workflowTextFiles = Get-ChildItem -LiteralPath $workflow -Recurse -File -ErrorAction SilentlyContinue | Where-Object {
+    Test-WorkflowTextFile -File $_
+  }
+  foreach ($file in $workflowTextFiles) {
+    $relative = $file.FullName.Substring($project.Length).TrimStart('\') -replace '\\', '/'
+    Test-TextFileEncoding -Path $file.FullName -Relative $relative
   }
 }
 
@@ -121,6 +225,7 @@ $orchestrationDecisionPath = Join-Path $project '.workflow/templates/orchestrati
 $multiPerspectiveReviewPath = Join-Path $project '.workflow/templates/multi_perspective_review.yaml'
 $multiModelPacketPath = Join-Path $project '.workflow/templates/multi_model_context_packet.md'
 $modelReviewReceiptPath = Join-Path $project '.workflow/templates/model_review_receipt.yaml'
+$designDebateReceiptPath = Join-Path $project '.workflow/templates/design_debate_receipt.yaml'
 $dispatchDir = Join-Path $project '.workflow/dispatch'
 
 $current = Read-TextOrEmpty $currentPath
@@ -134,6 +239,7 @@ $orchestrationDecision = Read-TextOrEmpty $orchestrationDecisionPath
 $multiPerspectiveReview = Read-TextOrEmpty $multiPerspectiveReviewPath
 $multiModelPacket = Read-TextOrEmpty $multiModelPacketPath
 $modelReviewReceipt = Read-TextOrEmpty $modelReviewReceiptPath
+$designDebateReceipt = Read-TextOrEmpty $designDebateReceiptPath
 
 if ($current -and $current -notmatch '(?m)^\s*current_gate:\s*\S+') {
   Add-Issue -Level 'error' -Message 'current.yaml must include current_gate.' -File '.workflow/current.yaml'
@@ -176,6 +282,31 @@ if ($orchestrationDecision -and $orchestrationDecision -notmatch '(?m)^\s*root_d
 }
 if ($orchestrationDecision -and $orchestrationDecision -notmatch '(?m)^\s*decision_consequence_disclosure:\s*') {
   Add-Issue -Level 'warning' -Message 'orchestration_decision.yaml should include decision_consequence_disclosure so confirmations expose page/route/workflow consequences before the user approves.' -File '.workflow/templates/orchestration_decision.yaml'
+}
+if ($orchestrationDecision -and ($orchestrationDecision -match '(?m)^\s*summary_only_failure:\s*true\s*$' -or $orchestrationDecision -match '(?ms)^\s*product_system_fit_gate:\s*\r?\n(?:(?!^[^\s]).*\r?\n)*?\s+required:\s*true\s*$')) {
+  foreach ($field in @('original_product_anchors:', 'native_interaction_grammar:', 'capability_reuse_plan:', 'candidate_insertion_points:', 'integration_fit:', 'first_visible_slice_acceptance:', 'design_debate_receipt:')) {
+    if ($orchestrationDecision -notmatch [regex]::Escape($field)) {
+      Add-Issue -Level 'warning' -Message "Product-System Fit Gate is required or summary_only_failure is true, but orchestration_decision.yaml is missing $field." -File '.workflow/templates/orchestration_decision.yaml'
+    }
+  }
+  if ($orchestrationDecision -notmatch '(?m)^\s*evidence_bound_product_fit:\s*$') {
+    Add-Issue -Level 'warning' -Message 'Product-System Fit Gate requires evidence_bound_product_fit before treating a correct-direction summary as sufficient.' -File '.workflow/templates/orchestration_decision.yaml'
+  }
+}
+$integrationFit = Get-YamlBlock -Text $orchestrationDecision -Key 'integration_fit'
+if ($integrationFit) {
+  $targetSurface = [regex]::Match($integrationFit, '(?m)^\s*target_surface_level:\s*(?<value>\S+)')
+  $fitStatus = [regex]::Match($integrationFit, '(?m)^\s*status:\s*(?<value>\S+)')
+  $editorProof = [regex]::Match($integrationFit, '(?m)^\s*editor_internal_integration_proven_by:\s*(?<value>.+?)\s*$')
+  $firstSlice = [regex]::Match($integrationFit, '(?ms)^\s*first_slice_must_show:\s*\r?\n\s*-\s*(?<value>.+?)\s*$')
+  $proofValue = if ($editorProof.Success) { $editorProof.Groups['value'].Value.Trim().Trim('"').Trim("'") } else { '' }
+  $firstSliceValue = if ($firstSlice.Success) { $firstSlice.Groups['value'].Value.Trim().Trim('"').Trim("'") } else { '' }
+  if ($fitStatus.Success -and $fitStatus.Groups['value'].Value -eq 'passed' -and $targetSurface.Success -and $targetSurface.Groups['value'].Value -match '^(global_nav|first_level_workspace)$') {
+    Add-Issue -Level 'warning' -Message 'integration_fit claims passed while target_surface_level is global_nav or first_level_workspace; placement/entry alone does not prove editor or workflow integration.' -File '.workflow/templates/orchestration_decision.yaml'
+  }
+  if ($fitStatus.Success -and $fitStatus.Groups['value'].Value -eq 'passed' -and ([string]::IsNullOrWhiteSpace($proofValue) -or $proofValue -match '^(<.*>|""|''''|null)$') -and ([string]::IsNullOrWhiteSpace($firstSliceValue) -or $firstSliceValue -match '^(<.*>|""|''''|null)$')) {
+    Add-Issue -Level 'warning' -Message 'integration_fit claims passed without editor_internal_integration_proven_by or first_slice_must_show evidence.' -File '.workflow/templates/orchestration_decision.yaml'
+  }
 }
 if ($multiPerspectiveReview) {
   foreach ($view in @('PM', 'FDE', 'UX_visible_acceptance', 'Workflow_context_engineering', 'Maestro_Codex_App_orchestration', 'Risk_overengineering')) {
@@ -231,6 +362,13 @@ if ($multiModelPacket -and $multiModelPacket -notmatch 'requested_model_alias:\s
 if ($modelReviewReceipt -and ($modelReviewReceipt -notmatch 'requested_model_alias:' -or $modelReviewReceipt -notmatch 'actual_model_verified_from_output:')) {
   Add-Issue -Level 'warning' -Message 'model_review_receipt.yaml should record requested model alias and whether the actual model was verified from output.' -File '.workflow/templates/model_review_receipt.yaml'
 }
+if ($designDebateReceipt) {
+  foreach ($field in @('participants:', 'evidence_used:', 'hypotheses:', 'accepted_objections:', 'rejected_objections:', 'main_agent_synthesis:', 'does_not_prove:')) {
+    if ($designDebateReceipt -notmatch [regex]::Escape($field)) {
+      Add-Issue -Level 'warning' -Message "design_debate_receipt.yaml should include $field so model/worker debates remain inspectable." -File '.workflow/templates/design_debate_receipt.yaml'
+    }
+  }
+}
 
 $combined = "$task`n$verification"
 $positiveCombined = Remove-NegativeEvidenceBlocks $combined
@@ -260,6 +398,80 @@ if ($claimsExternalWrite -and -not $hasExplicitApproval) {
 
 if ($thread -and $thread -match '(?mi)^\s*receipt_status:\s*accepted\s*$' -and $thread -notmatch '(?mi)accepted_by_main_at:') {
   Add-Issue -Level 'warning' -Message 'A worker receipt is accepted but accepted_by_main_at is missing.' -File '.workflow/thread_registry.yaml'
+}
+if ($thread) {
+  foreach ($block in (Get-TopLevelListBlocks -Text $thread)) {
+    if ($block -match '(?mi)^\s*status:\s*(no_output|interrupted|restarted)\s*$') {
+      $idMatch = [regex]::Match($block, '(?mi)^\s*-\s+id:\s*(?<id>[^\r\n]+)|^\s*id:\s*(?<id>[^\r\n]+)')
+      $recordId = if ($idMatch.Success) { $idMatch.Groups['id'].Value.Trim() } else { '<unknown>' }
+      if ($block -notmatch '(?mi)^\s*close_reason:\s*(?!(""|''''|<|null\s*$))\S+') {
+        Add-Issue -Level 'warning' -Message "Worker/delegate lifecycle record $recordId is no_output/interrupted/restarted without close_reason; started work must not count as evidence." -File '.workflow/thread_registry.yaml'
+      }
+      if ($block -notmatch '(?mi)^\s*next_action:\s*(?!(""|''''|<|null\s*$))\S+') {
+        Add-Issue -Level 'warning' -Message "Worker/delegate lifecycle record $recordId is no_output/interrupted/restarted without next_action; recovery cannot tell what to do next." -File '.workflow/thread_registry.yaml'
+      }
+    }
+  }
+}
+
+if (Test-Path -LiteralPath $verificationPath -PathType Leaf) {
+  $verificationItem = Get-Item -LiteralPath $verificationPath
+  $verificationLineCount = if ($verification) { ($verification -split "\r?\n").Count } else { 0 }
+  if ($verificationItem.Length -gt 65536 -or $verificationLineCount -gt 1000) {
+    Add-Issue -Level 'warning' -Message "verification.yaml is large ($verificationLineCount lines, $($verificationItem.Length) bytes); archive historical entries and keep only the active proof head." -File '.workflow/verification.yaml'
+  }
+}
+
+if (Test-Path -LiteralPath (Join-Path $workflow 'open_threads.yaml') -PathType Leaf) {
+  $openThreads = Read-TextOrEmpty (Join-Path $workflow 'open_threads.yaml')
+  $threadBlocks = [regex]::Matches($openThreads, '(?ms)^- id:\s*(?<id>[^\r\n]+).*?(?=^- id:|\z)')
+  $openCount = 0
+  $closedCount = 0
+  $staleOpen = @()
+  $now = Get-Date
+  foreach ($match in $threadBlocks) {
+    $block = $match.Value
+    if ($block -match '(?m)^\s*status:\s*open\s*$') {
+      $openCount += 1
+      $lastUpdated = [regex]::Match($block, "(?m)^\s*last_updated:\s*'?(?<date>\d{4}-\d{2}-\d{2})'?")
+      if ($lastUpdated.Success) {
+        try {
+          $date = [datetime]::ParseExact($lastUpdated.Groups['date'].Value, 'yyyy-MM-dd', [Globalization.CultureInfo]::InvariantCulture)
+          if (($now - $date).TotalDays -gt 14) {
+            $staleOpen += $match.Groups['id'].Value.Trim()
+          }
+        } catch {
+          Add-Issue -Level 'warning' -Message "open_threads.yaml has an unparsable last_updated date for open thread $($match.Groups['id'].Value.Trim())." -File '.workflow/open_threads.yaml'
+        }
+      } else {
+        $staleOpen += $match.Groups['id'].Value.Trim()
+      }
+    } elseif ($block -match '(?m)^\s*status:\s*closed\s*$') {
+      $closedCount += 1
+    }
+  }
+  $totalThreadCount = $openCount + $closedCount
+  if ($openCount -gt 6) {
+    Add-Issue -Level 'warning' -Message "open_threads.yaml has many open threads ($openCount open); close, merge, or supersede stale questions before claiming healthy recovery." -File '.workflow/open_threads.yaml'
+  }
+  if ($totalThreadCount -gt 0) {
+    $closureRate = [math]::Round(($closedCount / $totalThreadCount) * 100, 0)
+    if ($totalThreadCount -ge 4 -and $closureRate -lt 30) {
+      Add-Issue -Level 'warning' -Message "open_threads.yaml closure rate is low ($closureRate% closed across $totalThreadCount tracked threads); active recovery may be carrying unresolved decisions." -File '.workflow/open_threads.yaml'
+    }
+  }
+  if ($staleOpen.Count -gt 0) {
+    Add-Issue -Level 'warning' -Message "open_threads.yaml has stale open thread(s): $($staleOpen -join ', ')." -File '.workflow/open_threads.yaml'
+  }
+}
+
+if (Test-Path -LiteralPath $workflow -PathType Container) {
+  $flatReceipts = Get-ChildItem -LiteralPath $workflow -File -ErrorAction SilentlyContinue | Where-Object {
+    $_.Name -match '^(worker|delegate|model-review|verification|handoff)-receipt.*\.(yaml|yml|md)$'
+  }
+  if ($flatReceipts.Count -gt 0) {
+    Add-Issue -Level 'warning' -Message ".workflow root contains flat receipt file(s): $($flatReceipts.Name -join ', '); archive ingested receipts under .workflow/archive/receipts." -File '.workflow'
+  }
 }
 
 if (Test-Path -LiteralPath $dispatchDir -PathType Container) {

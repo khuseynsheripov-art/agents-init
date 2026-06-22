@@ -26,6 +26,18 @@ Use heavy machinery only when the loop shows real need: old-project insertion, U
 
 For product/UI/workflow placement, run the Product-System Fit Gate before implementation. Surface complaints such as "new page", "panel", "menu", "not integrated", "feels disconnected", or "too narrow" are weak signals only; infer whether the real issue is product structure, workflow ownership, interaction grammar, object boundaries, or temporary sidecar drift.
 
+Integration means object ownership, workflow ownership, capability reuse, and native interaction grammar. Placement is only the visible expression. Moving a button into a page, panel, toolbar, or global navigation is not integration unless those ownership and reuse contracts are proven.
+
+Correct direction is not enough. For product/UI/workflow fit, an answer fails if it only says "use the existing editor", "right panel", or "not a standalone page" without filling or explicitly blocking `evidence_bound_product_fit`.
+
+When the user is asking "is this the previous analysis, a new page, or the old page?", the answer must expose a short user-visible Product-System Fit receipt before asking for confirmation:
+
+- recovered anchors: what `.workflow`, memory, docs, or browser evidence was actually read;
+- root diagnosis: recovered mainline vs current sidecar/workbench/artifact;
+- PFIT status: `passed`, `blocked`, or `summary_only_failure`;
+- consequence: what a "yes" authorizes and what it does not authorize;
+- first question: one upstream confirmation, not downstream UI/model/details.
+
 ## First Decision
 
 | Situation | Route |
@@ -124,6 +136,7 @@ These are reference actions for the main agent. Do not present them as the prima
 | `$agents-init ingest-receipt` | Accept/reject worker output and update `.workflow`. |
 | `$agents-init route-maestro` | Choose direct, worker, Maestro, or Ralph. |
 | `$agents-init multi-model-packet` | Build a shared context packet for Claude/Codex/Maestro/Codex App review. |
+| `$agents-init invoke-maestro-skill` | Call Maestro spec/knowhow/search/KG/wiki/domain/workspace/msg/overlay/delegate-config and return receipt-shaped anchors. |
 | `$agents-init invoke-claude-review` | Run one bounded Claude review through Maestro delegate, read raw output, and return a receipt-shaped result. |
 | `$agents-init save-state` | Update recovery state before compression or handoff. |
 | `$agents-init maintain-knowledge` | Main agent updates, closes, promotes, indexes, or archives workflow knowledge instead of appending forever. |
@@ -204,6 +217,12 @@ Backend tests never prove these gates. Use screenshots, browser smoke, sample ou
 
 Maestro/Ralph is a workflow executor and knowledge/lifecycle engine. Use it after the current gate is clear.
 
+Maestro skills are not Claude delegate. Treat `spec/knowhow/search/KG/wiki/domain/workspace/msg/overlay` as first-class orchestration surfaces for local memory, reusable rules, code graph context, cross-workspace knowledge, coordination, and non-invasive workflow patches. Use `invoke-maestro-skill.ps1` when the main agent needs those anchors, then synthesize what they prove and do not prove before deciding. Search/spec/knowhow/KG output is context evidence, not product acceptance and not multi-model review.
+
+Project-level Maestro Codex skills are a separate surface from Maestro CLI knowledge commands. When the user asks for Maestro Grill, Maestro Next, Ralph, Quick, Learn, Guard, or another project-installed Maestro skill, do not stop at `$agents-init` or registry discovery. Verify availability with `maestro ralph skills --platform codex --json`, read the selected project skill's SKILL.md, and then either apply that skill's instructions in the current main-agent context or record why the skill is blocked by a human gate, missing evidence, or unsupported transport. Registry discovery alone is not execution, and `maestro <skill-name>` returning generic CLI help is not proof that the Codex skill ran.
+
+Minimum accepted Maestro skill smoke: recover `.workflow`; retrieve Maestro search/spec/knowhow/KG anchors when relevant; verify the project skill is listed; read the selected project skill's SKILL.md; perform one bounded in-context skill action or explicitly block it; write a receipt with raw commands/files read plus `proves` and `does_not_prove`. Started, listed, or recommended work is not evidence until the main agent ingests the receipt or artifact.
+
 For Codex App multi-session:
 
 - main thread = orchestrator and final judge;
@@ -213,6 +232,8 @@ For Codex App multi-session:
 - durable role session = continuous session only when repeated role context is valuable;
 - `thread_registry.yaml` indexes active and historical threads;
 - `worker_receipt.yaml` is required.
+
+Worker dispatch uses natural completion, not a no fixed-interval recall loop. After sending one bounded task, wait for the receipt unless the user asks for status, a deadline/tool event fires, a human gate is reached, or active workers may conflict. Started work is not evidence.
 
 Creating a Codex App thread is user-visible. If thread tools are available and the user asks for multi-session work, register the worker and send a bounded prompt with the receipt contract.
 
@@ -256,6 +277,9 @@ powershell -NoProfile -ExecutionPolicy Bypass -File "<skill>\scripts\doctor-agen
 
 # run one bounded Claude review through Maestro and read raw output
 powershell -NoProfile -ExecutionPolicy Bypass -File "<skill>\scripts\invoke-claude-review.ps1" -ProjectPath "<project>" -Task "<bounded analysis task>" -Json
+
+# call non-Claude Maestro skills for memory, knowledge, KG, config, coordination, or overlays
+powershell -NoProfile -ExecutionPolicy Bypass -File "<skill>\scripts\invoke-maestro-skill.ps1" -ProjectPath "<project>" -Skill search -Query "<task-relevant query>" -All -Json
 
 # print pressure prompts for forward-testing this skill on the project
 powershell -NoProfile -ExecutionPolicy Bypass -File "<skill>\scripts\pressure-test-agents.ps1" -ProjectPath "<project>"

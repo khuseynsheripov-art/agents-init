@@ -1,0 +1,58 @@
+task_id: ""
+debate_id: ""
+status: draft | submitted | accepted | rejected | superseded
+created_at: ""
+
+question:
+  user_facing_problem: ""
+  decision_needed: ""
+  human_gate: ""
+
+participants:
+  - id: ""
+    kind: main_agent | codex_worker | maestro_delegate | claude | user | other
+    lifecycle: one_shot | continuous | not_applicable
+    receipt_ref: ""
+    raw_output_ref: ""
+    raw_output_checked: false
+
+evidence_used:
+  - source: ""
+    proves: ""
+    does_not_prove: ""
+
+hypotheses:
+  - id: H1
+    claim: ""
+    supporting_evidence: []
+    objections: []
+    rejected_or_kept: kept | rejected | needs_user_acceptance
+
+accepted_objections:
+  - from: ""
+    objection: ""
+    why_accepted: ""
+
+rejected_objections:
+  - from: ""
+    objection: ""
+    why_rejected: ""
+
+main_agent_synthesis:
+  decision: ""
+  rationale: ""
+  what_this_authorizes: []
+  what_this_does_not_authorize: []
+  next_confirmation_question: ""
+
+proves:
+  - ""
+
+does_not_prove:
+  - ""
+
+risks:
+  - ""
+
+next:
+  - ""

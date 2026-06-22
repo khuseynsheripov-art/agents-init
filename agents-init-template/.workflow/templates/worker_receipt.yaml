@@ -1,0 +1,30 @@
+task_id: ""
+worker_id: ""
+status: done | blocked | needs_review
+
+scope: ""
+files_read: []
+files_changed: []
+commands_run: []
+
+artifact:
+  - ""
+
+evidence:
+  - ""
+
+decisions:
+  locked: []
+  proposed: []
+
+open_threads:
+  - ""
+
+does_not_prove:
+  - ""
+
+risks:
+  - ""
+
+next_recommended_step:
+  - ""

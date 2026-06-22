@@ -29,6 +29,29 @@ First confirmation:
 
 Do not start by asking about color, size, exported shape folders, model versions, or workflow upgrade state when the user's actual correction is that the audit/insertion mainline detached from the visible route. Those downstream details can be asked only after the mainline-vs-sidecar diagnosis is stated.
 
+## Screenshot Failure Update
+
+A later sample answer correctly said:
+
+- `/canvas/ozon-suite` is not the final product entrance;
+- `/canvas` can be a project-list entrance;
+- `/canvas/[id]` should be the real editor surface;
+- `/image` should be reused as capability/experience, not restored as the final page;
+- the first proposed slice is topbar Ozon Suite button -> right-side panel -> one normal Canvas image node with `metadata.ozonSuite`.
+
+This is better, but it is still not a full pass unless the answer shows the compact Product-System receipt:
+
+- recovered anchors from `.workflow`, memory points, docs, code, screenshots, or browser state;
+- what each anchor proves and does not prove;
+- PFIT status, especially whether the answer is still `summary_only_failure`;
+- native interaction grammar and capability reuse evidence;
+- first visible slice acceptance and what remains blocked;
+- design debate receipt if workers or Claude were invoked.
+
+Treat this kind of answer as "directionally improved clarification" rather than "integration system succeeded." The user should not have to infer whether analysis was real from confident prose.
+
+If the answer proposes `editor_topbar + editor_internal_panel + canvas_image_node_metadata`, that may be a valid first-slice hypothesis, but it is not proof by itself. The answer must still name the `object_owner`, `workflow_owner`, capability reuse contract, native interaction grammar, anti-sidecar risk, first visible browser action, and `does_not_prove` boundary. A topbar button plus right panel can still be a dressed-up sidecar if it bypasses Canvas selection state, node lifecycle, generation pipeline, save/undo/export behavior, or metadata ownership.
+
 ## Consequence Disclosure
 
 Before asking the user to approve a similar option, disclose:

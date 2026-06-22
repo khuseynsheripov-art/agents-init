@@ -1,0 +1,55 @@
+receipt_id: ""
+created_at: ""
+task_id: ""
+
+source_artifact:
+  path: ""
+  kind: plan | handoff | receipt | review | spec | note | thread | verification | other
+  owner: main_agent | worker | delegate | user | unknown
+  last_known_status: active | unresolved | superseded | archived | promoted | rejected | unknown
+
+current_status: active | unresolved | superseded | archived | promoted | rejected
+decision_state: proposed | changed | accepted | blocked | stale
+
+active_claims:
+  - claim: ""
+    evidence:
+      - ""
+    applies_until: ""
+
+unresolved_questions:
+  - question: ""
+    move_to_open_thread: true
+    blocker: false
+
+superseded_by:
+  artifact: ""
+  reason: ""
+
+promote_to:
+  current: false
+  task: false
+  open_threads: false
+  memory_points: false
+  spec: false
+  knowhow: false
+  archive: false
+
+archive_action:
+  needed: false
+  target: ""
+  keep_restore_copy: true
+
+restore_or_trace_ref:
+  original_path: ""
+  archive_path: ""
+  diff_or_index_ref: ""
+
+proves:
+  - ""
+
+does_not_prove:
+  - ""
+
+next_action:
+  - ""

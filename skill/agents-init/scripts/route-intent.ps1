@@ -83,6 +83,7 @@ $patterns = [ordered]@{
   salvage = @('salvage', 'failed branch', 'old branch', 'worktree', 'rewrite', 'second development', '\u4e8c\u5f00', '\u5931\u8d25', '\u65e7\u5206\u652f', '\u65e7\u9879\u76ee', '\u91cd\u6784', '\u91cd\u5199', '\u4ece0')
   worker = @('worker', 'subagent', 'sub-agent', 'thread', 'multi-session', 'receipt', 'parallel', '\u5b50\u4f1a\u8bdd', '\u591a\u4f1a\u8bdd', '\u8de8\u4f1a\u8bdd', '\u6d3e\u9001', '\u56de\u6267', '\u5e76\u884c', '\u5b50\u4ee3\u7406')
   maestro = @('maestro', 'ralph', 'delegate')
+  maestro_skill = @('maestro skill', 'maestro skills', 'spec', 'knowhow', '\bkg\b', 'knowledge graph', 'wiki', 'domain', 'workspace', 'overlay', 'agent-msg', '\u77e5\u8bc6\u56fe\u8c31', '\u77e5\u8bc6\u5e93', '\u8bb0\u4f4f', '\u590d\u7528', '\u4ee5\u540e.*\u9075\u5b88')
   multimodel = @('claude', 'cc2', 'second view', 'second-view', 'multi-model', 'multimodel', 'other model', 'model review', '\u591a\u5927\u6a21\u578b', '\u7b2c\u4e8c\u5927\u6a21\u578b', '\u53cd\u9a73', '\u8ba9\s*claude', '\u627e\s*claude')
   model_config = @('configure.*claude', 'claude.*configure', 'config.*claude', 'claude.*config', 'multiple claude', 'multiple.*account', 'account.*claude', 'profile', 'model names.*change', 'role mapping', 'cli-tools\.json', 'CLAUDE_CONFIG_DIR', '\u914d\u7f6e.*claude', 'claude.*\u914d\u7f6e', '\u591a.*claude', '\u591a.*\u8d26\u53f7', '\u8d26\u53f7', '\u8fc7\u671f', '\u5c01\u53f7')
   model_failure = @('404', 'model.*not.*found', 'model.*unavailable', 'model.*inaccessible', 'opus.*fail', 'claude-opus-4\.7', '4\.7-thinking', 'claude\.exe', 'cc2.*works', 'default claude', 'wrong model', 'model.*wrong')
@@ -90,6 +91,7 @@ $patterns = [ordered]@{
   sonnet = @('\bsonnet\b', 'save quota', 'cheap claude', '\u7701\u989d\u5ea6')
   no_claude = @('no claude', 'codex only', '\u4e0d\u8981\s*claude')
   continuous_model = @('continuous reviewer', 'resume', 'keep reviewing', '\u6301\u7eed.*reviewer', '\u6301\u7eed.*claude')
+  knowledge = @('maintain-knowledge', 'knowledge lifecycle', 'document lifecycle', 'document_lifecycle_receipt', 'documents.*piling', 'docs.*piling', 'unfinished docs', 'changed decisions', 'do not append.*summary', 'stop.*summary', 'archive.*receipts', 'supersede.*docs', 'promote.*knowhow', '\u6587\u6863', '\u6587\u4ef6.*\u5806', '\u6ca1\u5b8c\u6210', '\u672a\u5b8c\u6210', '\u51b3\u5b9a.*\u53d8', '\u51b3\u7b56.*\u53d8', '\u522b.*\u603b\u7ed3', '\u4e0d\u8981.*\u603b\u7ed3', '\u8ffd\u52a0\u603b\u7ed3', '\u5f52\u6863', '\u6536\u53e3', '\u788e\u7247', '\u6563\u843d', '\u672a\u89e3\u51b3', '\u8fc7\u671f', '\u53d6\u4ee3')
   direct = @('small clear task', 'direct', 'no maestro', '\u5c0f\u76ee\u6807', '\u5f88\u6e05\u695a', '\u76f4\u63a5', '\u4e0d\u9700\u8981\s*maestro')
   fuzzy = @('fuzzy', 'unclear', 'confused', 'clarify', 'grill', 'brainstorm', '\u6a21\u7cca', '\u8ff7\u832b', '\u6df7\u4e71', '\u4e0d\u61c2', '\u4e0d\u4f1a', '\u8dd1\u504f', '\u6f84\u6e05', '\u9700\u6c42')
   long = @('long task', 'many tasks', 'context', 'plan first', '\u957f\u4efb\u52a1', '\u591a\u4efb\u52a1', '\u4e0a\u4e0b\u6587', '\u62c6\u4efb\u52a1')
@@ -123,6 +125,39 @@ if (Test-AnyPattern $lower $patterns['menu']) {
     -ReadFirst @('skill/agents-init/SKILL.md', 'README.md') `
     -Commands @("powershell -NoProfile -ExecutionPolicy Bypass -File `"$env:USERPROFILE\.codex\skills\agents-init\scripts\update-agents-init.ps1`" -ProjectPath `"$project`"") `
     -MustNot @('Do not treat self-update as product semantic proof.', 'Do not ask v1/v2 as the first user-facing product question.', 'Do not upgrade business workflow files unless the project path is explicit or current project is clearly intended.')
+} elseif ($hasWorkflow -and (Test-AnyPattern $lower $patterns['knowledge'])) {
+  $route = New-Route `
+    -Name 'maintain-knowledge' `
+    -Action 'Recover workflow state, classify unfinished or stale artifacts, update active state, move unresolved items to open_threads, supersede changed decisions, promote stable lessons, and archive raw receipts.' `
+    -Gate 'knowledge_lifecycle_triage' `
+    -Confidence 'medium' `
+    -Reason 'Prompt asks to clean up document pile-up, unfinished docs, changed decisions, scattered receipts, or summary sprawl.' `
+    -ReadFirst ($readCore + @('.workflow/memory_points.yaml', '.workflow/archive/index.yaml')) `
+    -Templates @('.workflow/templates/orchestration_decision.yaml', '.workflow/templates/document_lifecycle_receipt.yaml') `
+    -Commands @(
+      "powershell -NoProfile -ExecutionPolicy Bypass -File `"$skillRoot\scripts\recover-agents.ps1`" -ProjectPath `"$project`"",
+      "powershell -NoProfile -ExecutionPolicy Bypass -File `"$skillRoot\scripts\invoke-maestro-skill.ps1`" -ProjectPath `"$project`" -Skill search -Query <task-relevant-query> -All -Json",
+      "powershell -NoProfile -ExecutionPolicy Bypass -File `"$skillRoot\scripts\invoke-maestro-skill.ps1`" -ProjectPath `"$project`" -Skill knowhow -Action search -Query <reusable-lesson-query> -Json",
+      "powershell -NoProfile -ExecutionPolicy Bypass -File `"$skillRoot\scripts\invoke-maestro-skill.ps1`" -ProjectPath `"$project`" -Skill spec -Action search -Query <stable-rule-query> -Json"
+    ) `
+    -MustNot @('Do not append another summary before classifying artifacts.', 'Do not treat route-intent as semantic proof.', 'Do not delete or archive without preserving restore or trace references.', 'Do not call the workflow healthy while open_threads warnings remain.')
+} elseif (Test-AnyPattern $lower $patterns['maestro_skill']) {
+  $route = New-Route `
+    -Name 'invoke-maestro-skill' `
+    -Action 'Use non-Claude Maestro surfaces in two steps: first capture CLI knowledge anchors from search/spec/knowhow/wiki/KG/domain/workspace/msg/overlay/delegate-config, then verify the project-level Maestro Codex skill registry, read the selected project skill SKILL.md, and either apply it in-context or record why it is blocked.' `
+    -Gate 'maestro_skill_context_or_lifecycle' `
+    -Confidence 'high' `
+    -Reason 'Prompt asks for Maestro skills, reusable memory/rules, KG/search, wiki/domain/workspace, or cross-agent coordination surfaces.' `
+    -ReadFirst ($readCore + @('references/maestro-routing.md', 'references/main-agent-orchestration.md')) `
+    -Templates @('.workflow/templates/orchestration_decision.yaml', '.workflow/templates/document_lifecycle_receipt.yaml') `
+    -Commands @(
+      "powershell -NoProfile -ExecutionPolicy Bypass -File `"$skillRoot\scripts\invoke-maestro-skill.ps1`" -ProjectPath `"$project`" -Skill search -Query <task-relevant-query> -All -Json",
+      "powershell -NoProfile -ExecutionPolicy Bypass -File `"$skillRoot\scripts\invoke-maestro-skill.ps1`" -ProjectPath `"$project`" -Skill kg -Action search -Query <code-or-object-query> -Json",
+      "powershell -NoProfile -ExecutionPolicy Bypass -File `"$skillRoot\scripts\invoke-maestro-skill.ps1`" -ProjectPath `"$project`" -Skill delegate-config -Json",
+      "maestro ralph skills --platform codex --json --quiet",
+      "Read the selected project skill SKILL.md, e.g. .codex/skills/maestro-grill/SKILL.md or .codex/skills/maestro-next/SKILL.md, before claiming project-level Maestro skill orchestration."
+    ) `
+    -MustNot @('Do not confuse Maestro skills with Claude delegate.', 'Do not claim multi-model review from search/spec/knowhow output.', 'Do not skip main-agent synthesis of proves and does_not_prove.', 'Registry enumeration alone is insufficient; file existence or recommendation is not execution.', 'Do not treat maestro grill --help or maestro next --help generic CLI output as proof that project Codex skills ran.')
 } elseif ($hasWorkflow -and (Test-AnyPattern $lower $patterns['context_reference'])) {
   $contextTemplates = @('.workflow/templates/orchestration_decision.yaml', '.workflow/templates/multi_perspective_review.yaml', '.workflow/memory_points.yaml')
   if (Test-AnyPattern $lower $patterns['multimodel']) {

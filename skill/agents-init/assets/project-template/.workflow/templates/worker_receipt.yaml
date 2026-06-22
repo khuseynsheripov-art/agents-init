@@ -2,7 +2,7 @@ task_id: ""
 worker_id: ""
 worker_thread_id: ""
 lifecycle: one_shot | continuous
-status: done | blocked | needs_review
+status: done | blocked | needs_review | no_output | interrupted | restarted
 receipt_status: submitted | accepted | rejected
 
 scope: ""
@@ -14,6 +14,9 @@ thread_actions:
   read_by_main: false
   archived_or_closed: false
   continuous_session_kept_active: false
+  no_output_or_interrupted: false
+  close_reason: ""
+  restart_of: ""
 
 artifact:
   - ""

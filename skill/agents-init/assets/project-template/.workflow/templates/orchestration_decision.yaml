@@ -52,6 +52,7 @@ semantic_signals:
 
 product_system_fit_gate:
   required: false
+  summary_only_failure: true
   surface_symptoms:
     weak_signal_only: true
     examples:
@@ -76,6 +77,74 @@ product_system_fit_gate:
       - ""
     formal_product_path:
       - ""
+  evidence_bound_product_fit:
+    original_product_anchors:
+      - source: ""
+        proves:
+          - ""
+        does_not_prove:
+          - ""
+    native_interaction_grammar:
+      menus_or_commands:
+        - ""
+      panels_or_sidebars:
+        - ""
+      toolbars_or_node_tools:
+        - ""
+      object_detail_or_workflow_surfaces:
+        - ""
+      visual_or_behavioral_patterns:
+        - ""
+    capability_reuse_plan:
+      existing_capability:
+        - ""
+      reuse_method:
+        - ""
+      fork_or_duplicate_risk:
+        - ""
+      evidence_needed:
+        - ""
+    candidate_insertion_points:
+      - insertion_point: ""
+        fit_reason: ""
+        risk: ""
+        evidence:
+          - ""
+    integration_fit:
+      target_surface_level: global_nav | first_level_workspace | project_list | object_detail | editor_topbar | editor_internal_panel | node_or_canvas_object | command_or_menu | settings_or_asset_library | adapter | unclear
+      claimed_integration_surface: ""
+      rejected_surface_levels:
+        - surface: ""
+          reason: ""
+      native_entry_point: ""
+      object_owner: ""
+      workflow_owner: ""
+      state_lifetime: ""
+      entry_frequency: ""
+      data_contract: ""
+      failure_or_rollback: ""
+      reused_capabilities:
+        - ""
+      duplicated_or_sidecar_risk:
+        - ""
+      anti_misclassification_check:
+        placement_only: true
+        global_nav_or_workspace_only: true
+        editor_internal_integration_proven_by: ""
+      first_slice_must_show:
+        - ""
+      status: pending | blocked | passed | summary_only_failure
+    first_visible_slice_acceptance:
+      user_visible_result: ""
+      proves_native_fit:
+        - ""
+      does_not_prove:
+        - ""
+      human_gate: ""
+    design_debate_receipt:
+      required_when_multi_model_or_workers_used: true
+      artifact: .workflow/templates/design_debate_receipt.yaml
+      status: not_needed | pending | completed | blocked
   first_confirmation: ""
   status: not_needed | pending | completed | blocked
 
@@ -115,6 +184,24 @@ multi_perspective_review:
   status: not_needed | pending | completed | blocked
 
 knowledge_lifecycle:
+  documents_to_triage:
+    - artifact: ""
+      reason: unfinished | decision_changed | stale | duplicated | receipt_scattered | too_large | unclear
+      receipt: .workflow/templates/document_lifecycle_receipt.yaml
+  active_documents_to_update:
+    - ""
+  documents_to_supersede:
+    - artifact: ""
+      superseded_by: ""
+      reason: ""
+  documents_to_archive:
+    - artifact: ""
+      archive_target: ""
+      restore_or_trace_ref: ""
+  unresolved_docs_to_open_threads:
+    - artifact: ""
+      open_thread_id: ""
+      question: ""
   update_current:
     - ""
   update_task:
@@ -137,6 +224,10 @@ knowledge_lifecycle:
       reason: ""
   kg_actions:
     - none | index | sync | search | context
+  receipts_to_archive:
+    - receipt: ""
+      archive_target: ""
+      raw_output_preserved: false
   archive_or_receipts:
     - ""
   does_not_update:

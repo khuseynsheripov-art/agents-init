@@ -3,7 +3,7 @@ param(
   [Parameter(Mandatory = $true)]
   [string]$ProjectPath,
 
-  [ValidateSet('auto', 'init', 'adopt', 'upgrade', 'status', 'menu', 'register-main', 'recover', 'validate', 'doctor', 'pressure-test', 'orchestrate', 'route-intent', 'dispatch-worker', 'ingest-receipt', 'save-state')]
+  [ValidateSet('auto', 'init', 'adopt', 'upgrade', 'status', 'menu', 'register-main', 'recover', 'validate', 'doctor', 'pressure-test', 'orchestrate', 'route-intent', 'invoke-maestro-skill', 'dispatch-worker', 'ingest-receipt', 'save-state')]
   [string]$Mode = 'auto',
 
   [string]$MainThreadId = '',
@@ -12,6 +12,11 @@ param(
   [string]$Task = '',
   [string]$Scope = '',
   [string]$ReceiptPath = '',
+  [ValidateSet('diagnose', 'search', 'spec', 'knowhow', 'wiki', 'kg', 'domain', 'workspace', 'msg', 'overlay', 'delegate-config')]
+  [string]$MaestroSkill = 'search',
+  [string]$Query = '',
+  [string]$Action = '',
+  [string]$Id = '',
 
   [switch]$ApplyAgentEntry
 )
@@ -366,6 +371,8 @@ function Upgrade-AgentsInitV2 {
     '.workflow\model_policy.yaml',
     '.workflow\templates\adoption_salvage_report.yaml',
     '.workflow\templates\delegate_receipt.yaml',
+    '.workflow\templates\design_debate_receipt.yaml',
+    '.workflow\templates\document_lifecycle_receipt.yaml',
     '.workflow\templates\handoff_receipt.yaml',
     '.workflow\templates\image_quality_review.yaml',
     '.workflow\templates\model_review_receipt.yaml',
@@ -409,6 +416,8 @@ function Upgrade-AgentsInitV2 {
   $managedTemplateFiles = @(
     '.workflow\templates\adoption_salvage_report.yaml',
     '.workflow\templates\delegate_receipt.yaml',
+    '.workflow\templates\design_debate_receipt.yaml',
+    '.workflow\templates\document_lifecycle_receipt.yaml',
     '.workflow\templates\handoff_receipt.yaml',
     '.workflow\templates\image_quality_review.yaml',
     '.workflow\templates\model_review_receipt.yaml',
@@ -833,17 +842,21 @@ if ($Mode -eq 'menu') {
       '$agents-init validate',
       '$agents-init pressure-test',
       '$agents-init orchestrate',
-      '$agents-init grill',
-      '$agents-init brainstorm',
-      '$agents-init blueprint',
-      '$agents-init plan',
       '$agents-init register-main',
       '$agents-init dispatch-worker',
       '$agents-init ingest-receipt',
-      '$agents-init route-maestro',
+      '$agents-init invoke-maestro-skill',
       '$agents-init route-intent',
       '$agents-init self-update',
       '$agents-init save-state'
+    )
+    natural_language_routes = @(
+      'grill / clarify fuzzy intent',
+      'brainstorm / multi-perspective review',
+      'blueprint / old-project salvage plan',
+      'plan / PM + FDE plan',
+      'route-maestro / choose direct, worker, Maestro, or Ralph after gates are clear',
+      'invoke-maestro-skill / search spec, knowhow, wiki, KG, domain, workspace, msg, overlay, or delegate config'
     )
     script_examples = @(
       'powershell -NoProfile -ExecutionPolicy Bypass -File <skill>\scripts\init-agents.ps1 -ProjectPath <project> -Mode auto',
@@ -853,6 +866,8 @@ if ($Mode -eq 'menu') {
       'powershell -NoProfile -ExecutionPolicy Bypass -File <skill>\scripts\init-agents.ps1 -ProjectPath <project> -Mode pressure-test',
       'powershell -NoProfile -ExecutionPolicy Bypass -File <skill>\scripts\init-agents.ps1 -ProjectPath <project> -Mode orchestrate -Prompt "the direction feels off"',
       'powershell -NoProfile -ExecutionPolicy Bypass -File <skill>\scripts\init-agents.ps1 -ProjectPath <project> -Mode route-intent -Prompt "I am fuzzy; help clarify"',
+      'powershell -NoProfile -ExecutionPolicy Bypass -File <skill>\scripts\init-agents.ps1 -ProjectPath <project> -Mode invoke-maestro-skill -MaestroSkill search -Query "agents-init knowledge lifecycle"',
+      'powershell -NoProfile -ExecutionPolicy Bypass -File <skill>\scripts\invoke-maestro-skill.ps1 -ProjectPath <project> -Skill kg -Action search -Query "canvas node model" -Json',
       'powershell -NoProfile -ExecutionPolicy Bypass -File <skill>\scripts\update-agents-init.ps1 -ProjectPath <project>',
       'powershell -NoProfile -ExecutionPolicy Bypass -File <skill>\scripts\init-agents.ps1 -ProjectPath <project> -Mode dispatch-worker -TaskId T3 -Task "analyze old branch" -Scope "read-only docs"',
       'powershell -NoProfile -ExecutionPolicy Bypass -File <skill>\scripts\init-agents.ps1 -ProjectPath <project> -Mode ingest-receipt -ReceiptPath <receipt.yaml>',
@@ -894,6 +909,26 @@ if ($Mode -eq 'route-intent') {
   }
   $routeScript = Join-Path $PSScriptRoot 'route-intent.ps1'
   & $routeScript -ProjectPath $project -Prompt $Prompt -Json
+  exit $LASTEXITCODE
+}
+
+if ($Mode -eq 'invoke-maestro-skill') {
+  $maestroSkillScript = Join-Path $PSScriptRoot 'invoke-maestro-skill.ps1'
+  if (-not [string]::IsNullOrWhiteSpace($Action) -and -not [string]::IsNullOrWhiteSpace($Id) -and -not [string]::IsNullOrWhiteSpace($Query)) {
+    & $maestroSkillScript -ProjectPath $project -Skill $MaestroSkill -Action $Action -Id $Id -Query $Query -Json
+  } elseif (-not [string]::IsNullOrWhiteSpace($Action) -and -not [string]::IsNullOrWhiteSpace($Id)) {
+    & $maestroSkillScript -ProjectPath $project -Skill $MaestroSkill -Action $Action -Id $Id -Json
+  } elseif (-not [string]::IsNullOrWhiteSpace($Action) -and -not [string]::IsNullOrWhiteSpace($Query)) {
+    & $maestroSkillScript -ProjectPath $project -Skill $MaestroSkill -Action $Action -Query $Query -Json
+  } elseif (-not [string]::IsNullOrWhiteSpace($Action)) {
+    & $maestroSkillScript -ProjectPath $project -Skill $MaestroSkill -Action $Action -Json
+  } elseif (-not [string]::IsNullOrWhiteSpace($Query)) {
+    & $maestroSkillScript -ProjectPath $project -Skill $MaestroSkill -Query $Query -Json
+  } elseif (-not [string]::IsNullOrWhiteSpace($Id)) {
+    & $maestroSkillScript -ProjectPath $project -Skill $MaestroSkill -Id $Id -Json
+  } else {
+    & $maestroSkillScript -ProjectPath $project -Skill $MaestroSkill -Json
+  }
   exit $LASTEXITCODE
 }
 

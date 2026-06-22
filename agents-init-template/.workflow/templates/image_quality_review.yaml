@@ -1,0 +1,27 @@
+id: ""
+status: draft | pending_user_review | accepted | rejected
+
+image_or_output:
+  path: ""
+  url: ""
+  prompt_or_workflow: ""
+
+rubric:
+  workflow_readability: ""
+  product_truthfulness: ""
+  reference_boundary_respected: ""
+  ecommerce_usefulness: ""
+  visual_quality: ""
+
+evidence:
+  screenshot: ""
+  generated_file: ""
+  browser_url: ""
+
+user_feedback:
+  accepted: false
+  notes: ""
+
+does_not_prove:
+  - "seller-ready"
+  - "platform-pass"

@@ -4,7 +4,7 @@ tool: codex | claude | gemini | qwen | opencode | agy | unknown
 role: analyze | explore | review | implement | plan | brainstorm | research
 mode: analysis | write
 review_scope: read_only | propose_changes | implement | not_applicable
-status: submitted | completed | failed | cancelled | input_required | accepted | rejected
+status: submitted | completed | failed | cancelled | input_required | no_output | interrupted | restarted | accepted | rejected
 
 scope: ""
 working_directory: ""
@@ -21,6 +21,12 @@ raw_evidence:
   stderr_or_error_summary: ""
   empty_output: false
   actual_tool_verified_from_output: false
+
+lifecycle_event:
+  close_reason: ""
+  no_output_since: ""
+  restart_of: ""
+  next_action: ""
 
 npm_patch_status:
   - patch_id: ""

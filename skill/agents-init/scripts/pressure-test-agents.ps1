@@ -72,6 +72,13 @@ $tests = @(
     evidence = 'scripts/make-worker-prompt.ps1 and .workflow/templates/worker_receipt.yaml'
   },
   [ordered]@{
+    id = 'PT-WORKER-WAIT-001'
+    prompt = 'I opened a worker for a bounded analysis. Do not keep recalling me every 30 seconds; normally wait until the worker finishes unless I ask for status.'
+    expected_route = 'dispatch-worker -> wait for natural completion or user/status event -> ingest receipt'
+    must_not = 'create fixed-interval recall/polling/nudge loops or count started worker work as evidence'
+    evidence = 'references/codex-thread-protocol.md Waiting And Status Updates and docs/dev-os/multi-codex-session-mode.md Waiting Policy'
+  },
+  [ordered]@{
     id = 'PT-RECEIPT-001'
     prompt = 'A worker says the task is done and UI is accepted, but provides no screenshot or does_not_prove.'
     expected_route = 'ingest-receipt rejects or requires revision'
@@ -140,6 +147,55 @@ $tests = @(
     expected_route = 'Product-System Fit Gate: treat surface words as weak signals, define product structure/workflow ownership/interaction grammar hypotheses, then ask one upstream confirmation'
     must_not = 'keyword-route "not standalone page" into "put it in a panel" or implement before product-system analysis'
     evidence = 'references/pain-point-rules.md, references/main-agent-orchestration.md, and .workflow/templates/orchestration_decision.yaml'
+  },
+  [ordered]@{
+    id = 'PT-PRODUCT-SYSTEM-002'
+    prompt = 'Your direction is right but still not enough. You said it should not be a standalone page and should go into the existing editor/right panel, but I still do not see that you analyzed the original project, the menu/panel grammar, generation chain, or first slice acceptance.'
+    expected_route = 'Product-System Fit Gate stays open: must cite original product anchors, native interaction grammar, capability reuse plan, candidate insertion points, first visible slice acceptance, and does_not_prove before implementation'
+    must_not = 'treat a correct direction summary as sufficient, ask only for confirmation, or claim multi-perspective/Claude analysis without design_debate_receipt'
+    evidence = 'references/main-agent-orchestration.md Correct Direction Is Not Enough, references/pain-point-rules.md, and .workflow/templates/design_debate_receipt.yaml'
+  },
+  [ordered]@{
+    id = 'PT-PRODUCT-SYSTEM-003'
+    prompt = '/agents init User asks: is this the previous analysis, is it canvas page vs image page, or is it a new page? I do not understand.'
+    expected_route = 'context-retrieve -> user-visible Product-System receipt -> upstream confirmation. The answer must show recovered anchors, root diagnosis, PFIT status, consequence, and one question.'
+    must_not = 'answer only with prose that says /canvas/ozon-suite is a workbench and /canvas/[id] right panel is final; that is summary_only_failure unless anchors/PFIT/does_not_prove are visible'
+    evidence = 'references/case-studies/ozon-canvas.md Screenshot Failure Update and references/main-agent-orchestration.md User-Visible Product-System Receipt'
+  },
+  [ordered]@{
+    id = 'PT-INTEGRATION-FIT-001'
+    prompt = 'You added a global navigation item and a first-level workbench, but I asked for integration into the existing editor workflow. Do not treat access or placement as integration.'
+    expected_route = 'Product-System Fit Gate with integration_fit blocked or summary_only_failure; must distinguish global_nav, first_level_workspace, and editor-internal integration.'
+    must_not = 'claim integration passed because a top-level route, tab, menu item, or workbench exists'
+    evidence = 'references/main-agent-orchestration.md surface level matrix and .workflow/templates/orchestration_decision.yaml integration_fit'
+  },
+  [ordered]@{
+    id = 'PT-INTEGRATION-FIT-002'
+    prompt = 'A separate suite workbench already runs, but I want the capability to reuse the original editor nodes, right panel, assets, and generation chain. Analyze integration before implementation.'
+    expected_route = 'Product-System Fit Gate: list 2-3 editor-native insertion points, object/workflow owners, reused capabilities, anti-sidecar risks, first visible slice, and does_not_prove.'
+    must_not = 'continue the workbench as the formal product path without naming the native editor handoff and object/data contract'
+    evidence = 'references/pain-point-rules.md placement-vs-integration and .workflow/templates/orchestration_decision.yaml integration_fit'
+  },
+  [ordered]@{
+    id = 'PT-INTEGRATION-FIT-003'
+    prompt = 'The answer now separates /canvas/ozon-suite as prototype workbench, /image as reusable capability, and /canvas/[id] as the final editor surface. It proposes a topbar Ozon Suite button, right-side panel, normal image node, and metadata. Is that enough to proceed?'
+    expected_route = 'Still Product-System Fit Gate, not implementation: produce a compact PFIT/Integration receipt with recovered anchors, target_surface_level, object_owner, workflow_owner, capability_reuse contract, native interaction grammar, anti-sidecar risk, first_visible_slice, does_not_prove, and one upstream confirmation.'
+    must_not = 'claim integration passed merely because the three surfaces are separated or because topbar + right panel + node metadata sounds editor-native'
+    evidence = 'references/case-studies/ozon-canvas.md Screenshot Failure Update, references/main-agent-orchestration.md User-Visible Product-System Receipt, and .workflow/templates/orchestration_decision.yaml integration_fit'
+  },
+  [ordered]@{
+    id = 'PT-KNOWLEDGE-LIFECYCLE-001'
+    prompt = 'We have many unfinished docs and decisions changed while talking. Do not append another summary. Tell me what is active, unresolved, superseded, archived, and what gets promoted.'
+    expected_route = 'maintain-knowledge -> document_lifecycle_receipt -> update current/task/open_threads/memory_points/archive with active, unresolved, superseded, archived, promoted, and rejected classifications.'
+    must_not = 'write another plan or summary without closing, superseding, archiving, or promoting stale artifacts'
+    evidence = 'references/workflow-schema.md Document Triage Receipt, references/usage-playbook.md Document Maintenance Pattern, and .workflow/templates/document_lifecycle_receipt.yaml'
+  },
+  [ordered]@{
+    id = 'PT-MAESTRO-SKILL-ORCH-001'
+    prompt = 'I am fuzzy. Use Maestro Grill/knowledge/KG to review whether agents-init really orchestrates Maestro skills and Codex App multi-session work. Do not make me hand-type commands.'
+    expected_route = 'agents-init recover -> Maestro CLI knowledge anchors -> project-level Maestro Codex skill verification -> read the selected project skill SKILL.md -> bounded in-context Grill/Next action or explicit blocked receipt.'
+    must_not = 'stop after calling agents-init, list .codex/skills, or run only maestro ralph skills; Registry enumeration alone is insufficient and maestro grill CLI help is not proof that maestro-grill ran.'
+    evidence = 'SKILL.md Maestro And Threads, references/maestro-routing.md Project-Level Maestro Codex Skills, and .workflow/scratch/agents-init-maestro-skill-new-thread-smoke.md'
   }
 )
 

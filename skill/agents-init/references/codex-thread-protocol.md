@@ -74,6 +74,20 @@ The main agent must:
 5. Close/archive one-shot workers when tools allow.
 6. For continuous sessions, update last receipt and retire/supersede if the scope changed.
 
+## Waiting And Status Updates
+
+Worker dispatch is not a fixed-interval recall loop. After the main agent sends one bounded worker task, the normal path is natural completion: wait for the worker receipt or for the user to ask for status.
+
+Do not fixed-interval poll, nudge, or summarize worker status just because 30 seconds passed. Status checks are appropriate only when:
+
+- the user asks for status;
+- the worker has an explicit deadline or timeout;
+- a tool reports completion, failure, or interruption;
+- the main agent needs to cross a human gate before continuing;
+- multiple active workers may conflict and the registry needs a coordination update.
+
+If a worker is still running, the main agent may give a short user-facing note and then keep waiting. Started work is not evidence. Only returned receipts, raw output, or inspected artifacts can be ingested.
+
 ## With Claude Or Other CLI Models
 
 Codex App multi-session is not the same transport as Claude Code `cc2`.
