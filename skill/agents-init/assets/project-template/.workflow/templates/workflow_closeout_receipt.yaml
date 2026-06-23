@@ -15,6 +15,31 @@ workflow_closeout_receipt:
     open_threads: ".workflow/open_threads.yaml"
     verification: ".workflow/verification.yaml"
     authority_index: ".workflow/authority_index.yaml"
+  head_mutations:
+    current:
+      status: unchanged
+      note: ""
+    task:
+      status: unchanged
+      note: ""
+    open_threads:
+      status: unchanged
+      note: ""
+    verification:
+      status: unchanged
+      note: ""
+    authority_index:
+      status: unchanged
+      note: ""
+    memory_points:
+      status: unchanged
+      note: ""
+    thread_registry:
+      status: unchanged
+      note: ""
+    session_recovery:
+      status: unchanged
+      note: ""
   updated_heads:
     - ".workflow/authority_index.yaml"
     - ".workflow/verification.yaml"

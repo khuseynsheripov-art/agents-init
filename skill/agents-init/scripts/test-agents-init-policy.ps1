@@ -522,6 +522,34 @@ next_recommended_step:
   }
 }
 
+$closeoutHeadSyncRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("agents-init-closeout-head-sync-test-" + [guid]::NewGuid().ToString('N'))
+try {
+  Copy-Item -LiteralPath $templateRoot -Destination $closeoutHeadSyncRoot -Recurse
+
+  $closeoutScript = Join-Path $skillRoot 'scripts\closeout-workflow.ps1'
+  $closeoutJson = & powershell -NoProfile -ExecutionPolicy Bypass -File $closeoutScript -ProjectPath $closeoutHeadSyncRoot -Reason route_change -TaskId CLOSEOUT-SYNC-001 -CurrentAuthority '.workflow/current.yaml' -Json
+  Assert-True ($LASTEXITCODE -eq 0) "closeout-workflow.ps1 must exit 0 for a fixture route_change. Output: $closeoutJson"
+  $closeoutResult = $closeoutJson | ConvertFrom-Json
+  $closeoutReceiptPath = Join-Path $closeoutHeadSyncRoot ($closeoutResult.receipt -replace '/', '\')
+  Assert-True (Test-Path -LiteralPath $closeoutReceiptPath -PathType Leaf) 'closeout-workflow.ps1 must write the reported closeout receipt path.'
+  $closeoutReceipt = Read-Text $closeoutReceiptPath
+
+  Assert-True ($closeoutReceipt -match 'head_mutations:') 'workflow closeout receipt must include head_mutations so each runtime head is explicitly updated or unchanged.'
+  foreach ($head in @('current', 'task', 'open_threads', 'verification', 'authority_index', 'memory_points', 'thread_registry', 'session_recovery')) {
+    Assert-True ($closeoutReceipt -match "(?ms)^\s{4}${head}:\s*\r?\n\s{6}status:\s*(updated|unchanged)") "workflow closeout receipt must mark $head as updated or unchanged."
+  }
+  Assert-True ($closeoutReceipt -match '(?ms)^\s{4}task:\s*\r?\n\s{6}status:\s*unchanged' -and $closeoutReceipt -match '(?ms)^\s{4}open_threads:\s*\r?\n\s{6}status:\s*unchanged') 'closeout-workflow.ps1 must explicitly mark task/open_threads unchanged when it does not mutate them.'
+  Assert-True (($closeoutResult.updated -contains '.workflow/authority_index.yaml') -and ($closeoutResult.updated -contains '.workflow/verification.yaml') -and ($closeoutResult.updated -contains '.workflow/session-recovery-brief.md')) 'closeout-workflow.ps1 must report the core heads it actually updated.'
+} finally {
+  if (Test-Path -LiteralPath $closeoutHeadSyncRoot -PathType Container) {
+    $resolvedCloseoutTmp = (Resolve-Path -LiteralPath $closeoutHeadSyncRoot).Path
+    $tmpBase = [System.IO.Path]::GetTempPath()
+    if ($resolvedCloseoutTmp.StartsWith($tmpBase, [System.StringComparison]::OrdinalIgnoreCase)) {
+      Remove-Item -LiteralPath $resolvedCloseoutTmp -Recurse -Force
+    }
+  }
+}
+
 $binaryScratchRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("agents-init-binary-scratch-test-" + [guid]::NewGuid().ToString('N'))
 try {
   Copy-Item -LiteralPath $templateRoot -Destination $binaryScratchRoot -Recurse

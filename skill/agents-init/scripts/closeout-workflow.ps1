@@ -187,6 +187,49 @@ $sessionRecoveryPath = Join-Path $workflow 'session-recovery-brief.md'
 $updated = New-Object System.Collections.Generic.List[string]
 $planned = New-Object System.Collections.Generic.List[string]
 
+$currentHeadStatus = 'unchanged'
+$currentBeforeText = Read-TextOrEmpty $currentPath
+if ($currentBeforeText -match '(?m)^updated_at:\s*.*$') {
+  $currentHeadStatus = 'updated'
+}
+
+$headMutationsText = @"
+  head_mutations:
+    current:
+      status: $currentHeadStatus
+      note: "updated_at timestamp is refreshed when present"
+    task:
+      status: unchanged
+      note: "closeout-workflow records the closeout but does not mutate task.yaml"
+    open_threads:
+      status: unchanged
+      note: "closeout-workflow records thread refs but does not mutate open_threads.yaml"
+    verification:
+      status: updated
+      note: "appends closeout verification evidence"
+    authority_index:
+      status: updated
+      note: "records authority/evidence/supersession/promotion/archive refs"
+    memory_points:
+      status: unchanged
+      note: "memory point ids are recorded only; memory_points.yaml is not mutated"
+    thread_registry:
+      status: unchanged
+      note: "thread/delegate lifecycle records are not mutated by this closeout"
+    session_recovery:
+      status: updated
+      note: "save-state refreshes session-recovery-brief.md after source files update"
+"@
+
+$updatedHeads = @()
+if ($currentHeadStatus -eq 'updated') {
+  $updatedHeads += '.workflow/current.yaml'
+}
+$updatedHeads += '.workflow/authority_index.yaml'
+$updatedHeads += '.workflow/verification.yaml'
+$updatedHeads += '.workflow/session-recovery-brief.md'
+$updatedHeadsYaml = ($updatedHeads | ForEach-Object { "    - `"$($_)`"" }) -join "`r`n"
+
 $receiptText = @"
 workflow_closeout_receipt:
   id: $(Convert-ToYamlScalar $closeoutId)
@@ -208,10 +251,9 @@ workflow_closeout_receipt:
     open_threads: ".workflow/open_threads.yaml"
     verification: ".workflow/verification.yaml"
     authority_index: ".workflow/authority_index.yaml"
+$headMutationsText
   updated_heads:
-    - ".workflow/authority_index.yaml"
-    - ".workflow/verification.yaml"
-    - ".workflow/session-recovery-brief.md"
+$updatedHeadsYaml
   closed_or_superseded_threads:
     - $(Convert-ToYamlScalar $OpenThreadId)
   authority_index_updates:
@@ -250,6 +292,9 @@ workflow_closeout_receipt:
 "@
 
 $planned.Add($receiptRel)
+if ($currentHeadStatus -eq 'updated') {
+  $planned.Add('.workflow/current.yaml')
+}
 $planned.Add('.workflow/authority_index.yaml')
 $planned.Add('.workflow/verification.yaml')
 $planned.Add('.workflow/session-recovery-brief.md')
