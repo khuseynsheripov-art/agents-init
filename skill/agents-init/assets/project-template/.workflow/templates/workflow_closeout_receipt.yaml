@@ -1,0 +1,45 @@
+workflow_closeout_receipt:
+  id: ""
+  recorded_at: ""
+  reason: route_change | gate_change | direction_correction | handoff | promotion | archive_cleanup | receipt_ingest | task_closeout
+  task_id: ""
+  active_head_before:
+    current: ".workflow/current.yaml"
+    task: ".workflow/task.yaml"
+    open_threads: ".workflow/open_threads.yaml"
+    verification: ".workflow/verification.yaml"
+    authority_index: ".workflow/authority_index.yaml"
+  active_head_after:
+    current: ".workflow/current.yaml"
+    task: ".workflow/task.yaml"
+    open_threads: ".workflow/open_threads.yaml"
+    verification: ".workflow/verification.yaml"
+    authority_index: ".workflow/authority_index.yaml"
+  updated_heads:
+    - ".workflow/authority_index.yaml"
+    - ".workflow/verification.yaml"
+    - ".workflow/session-recovery-brief.md"
+  closed_or_superseded_threads: []
+  authority_index_updates:
+    current_authority: []
+    active_evidence: []
+    superseded: []
+    promoted: []
+    archived: []
+  maestro_promotions:
+    spec: []
+    knowhow: []
+    kg_or_search_index: []
+  session_recovery_update:
+    status: pending
+    path: ".workflow/session-recovery-brief.md"
+  validation_status:
+    command: "validate-workflow.ps1 -ProjectPath <project>"
+    status: not_run | passed | warning | failed
+  proves:
+    - "A main-agent lifecycle closeout transaction was recorded."
+  does_not_prove:
+    - "This is not product acceptance."
+    - "This is not UI/sample/generated-image/business acceptance."
+    - "This is not proof that Maestro promotion or archive cleanup happened unless artifacts are listed."
+  next_action: ""

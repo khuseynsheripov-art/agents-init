@@ -176,6 +176,7 @@ $requiredFiles = @(
   '.workflow/thread_registry.yaml',
   '.workflow/memory_points.yaml',
   '.workflow/model_policy.yaml',
+  '.workflow/authority_index.yaml',
   '.workflow/templates/worker_receipt.yaml',
   '.workflow/templates/task_brief.yaml',
   '.workflow/templates/delegate_receipt.yaml',
@@ -193,6 +194,7 @@ $requiredFiles = @(
   '.workflow/templates/document_lifecycle_receipt.yaml',
   '.workflow/templates/plan_pm_fde.yaml',
   '.workflow/templates/session_recovery_brief.md',
+  '.workflow/templates/workflow_closeout_receipt.yaml',
   'docs/dev-os/command-intent-map.md',
   'docs/dev-os/multi-codex-session-mode.md'
 )
@@ -220,12 +222,15 @@ $verificationPath = Join-Path $project '.workflow/verification.yaml'
 $threadPath = Join-Path $project '.workflow/thread_registry.yaml'
 $memoryPointsPath = Join-Path $project '.workflow/memory_points.yaml'
 $modelPolicyPath = Join-Path $project '.workflow/model_policy.yaml'
+$authorityIndexPath = Join-Path $project '.workflow/authority_index.yaml'
+$sessionRecoveryPath = Join-Path $project '.workflow/session-recovery-brief.md'
 $workerReceiptPath = Join-Path $project '.workflow/templates/worker_receipt.yaml'
 $orchestrationDecisionPath = Join-Path $project '.workflow/templates/orchestration_decision.yaml'
 $multiPerspectiveReviewPath = Join-Path $project '.workflow/templates/multi_perspective_review.yaml'
 $multiModelPacketPath = Join-Path $project '.workflow/templates/multi_model_context_packet.md'
 $modelReviewReceiptPath = Join-Path $project '.workflow/templates/model_review_receipt.yaml'
 $designDebateReceiptPath = Join-Path $project '.workflow/templates/design_debate_receipt.yaml'
+$workflowCloseoutReceiptPath = Join-Path $project '.workflow/templates/workflow_closeout_receipt.yaml'
 $dispatchDir = Join-Path $project '.workflow/dispatch'
 
 $current = Read-TextOrEmpty $currentPath
@@ -234,12 +239,15 @@ $verification = Read-TextOrEmpty $verificationPath
 $thread = Read-TextOrEmpty $threadPath
 $memoryPoints = Read-TextOrEmpty $memoryPointsPath
 $modelPolicy = Read-TextOrEmpty $modelPolicyPath
+$authorityIndex = Read-TextOrEmpty $authorityIndexPath
+$sessionRecovery = Read-TextOrEmpty $sessionRecoveryPath
 $workerReceipt = Read-TextOrEmpty $workerReceiptPath
 $orchestrationDecision = Read-TextOrEmpty $orchestrationDecisionPath
 $multiPerspectiveReview = Read-TextOrEmpty $multiPerspectiveReviewPath
 $multiModelPacket = Read-TextOrEmpty $multiModelPacketPath
 $modelReviewReceipt = Read-TextOrEmpty $modelReviewReceiptPath
 $designDebateReceipt = Read-TextOrEmpty $designDebateReceiptPath
+$workflowCloseoutReceipt = Read-TextOrEmpty $workflowCloseoutReceiptPath
 
 if ($current -and $current -notmatch '(?m)^\s*current_gate:\s*\S+') {
   Add-Issue -Level 'error' -Message 'current.yaml must include current_gate.' -File '.workflow/current.yaml'
@@ -328,6 +336,61 @@ if ($thread -and $thread -notmatch '(?m)^\s*lifecycle:\s*') {
 }
 if ($memoryPoints -and ($memoryPoints -notmatch 'memory_points:' -or $memoryPoints -notmatch 'supersedes:')) {
   Add-Issue -Level 'warning' -Message 'memory_points.yaml should include memory_points and supersedes fields.' -File '.workflow/memory_points.yaml'
+}
+if ($authorityIndex -and ($authorityIndex -notmatch 'current_authority:' -or $authorityIndex -notmatch 'active_evidence:' -or $authorityIndex -notmatch 'superseded:' -or $authorityIndex -notmatch 'promoted:' -or $authorityIndex -notmatch 'archived:')) {
+  Add-Issue -Level 'warning' -Message 'authority_index.yaml should include current_authority, active_evidence, superseded, promoted, and archived sections.' -File '.workflow/authority_index.yaml'
+}
+if ($authorityIndex -and (Test-LikelyMojibake $authorityIndex)) {
+  Add-Issue -Level 'error' -Message 'authority_index.yaml appears to contain mojibake or corrupted non-ASCII text.' -File '.workflow/authority_index.yaml'
+}
+if ($workflowCloseoutReceipt) {
+  foreach ($field in @('reason:', 'active_head_before:', 'active_head_after:', 'updated_heads:', 'authority_index_updates:', 'maestro_promotions:', 'session_recovery_update:', 'validation_status:', 'proves:', 'does_not_prove:')) {
+    if ($workflowCloseoutReceipt -notmatch [regex]::Escape($field)) {
+      Add-Issue -Level 'error' -Message "workflow_closeout_receipt.yaml must include $field." -File '.workflow/templates/workflow_closeout_receipt.yaml'
+    }
+  }
+}
+if ($sessionRecovery) {
+  if (Test-LikelyMojibake $sessionRecovery) {
+    Add-Issue -Level 'warning' -Message 'session-recovery brief appears to contain mojibake or corrupted non-ASCII text.' -File '.workflow/session-recovery-brief.md'
+  }
+  $gateMatch = [regex]::Match($current, '(?m)^\s*current_gate:\s*(?<value>.+?)\s*$')
+  if ($gateMatch.Success) {
+    $currentGate = $gateMatch.Groups['value'].Value.Trim().Trim('"').Trim("'")
+    if ($currentGate -and $currentGate -notmatch '^(<.*>|null|""|'''')$' -and $sessionRecovery -notmatch [regex]::Escape($currentGate)) {
+      Add-Issue -Level 'warning' -Message 'session-recovery brief appears stale: current_gate from current.yaml is not present.' -File '.workflow/session-recovery-brief.md'
+    }
+  }
+  $activeTaskBlockForRecovery = Get-YamlBlock -Text $task -Key 'active_task'
+  $activeTaskIdMatch = [regex]::Match($activeTaskBlockForRecovery, '(?m)^\s*id:\s*(?<value>[^\r\n#]+)')
+  if ($activeTaskIdMatch.Success) {
+    $activeTaskId = $activeTaskIdMatch.Groups['value'].Value.Trim().Trim('"').Trim("'")
+    if ($activeTaskId -and $activeTaskId -notmatch '^(<.*>|null|""|'''')$' -and $sessionRecovery -notmatch [regex]::Escape($activeTaskId)) {
+      Add-Issue -Level 'warning' -Message 'session-recovery brief appears stale: active_task from task.yaml is not present.' -File '.workflow/session-recovery-brief.md'
+    }
+  }
+}
+$activeTaskBlockForStaleness = Get-YamlBlock -Text $task -Key 'active_task'
+$activeTaskUpdatedMatch = [regex]::Match($activeTaskBlockForStaleness, "(?m)^\s*updated_at:\s*['""]?(?<date>\d{4}-\d{2}-\d{2})")
+if ($activeTaskUpdatedMatch.Success) {
+  try {
+    $activeTaskUpdated = [datetime]::ParseExact($activeTaskUpdatedMatch.Groups['date'].Value, 'yyyy-MM-dd', [Globalization.CultureInfo]::InvariantCulture)
+    $latestVerificationDate = $null
+    foreach ($dateMatch in [regex]::Matches($verification, "(?m)^\s*(recorded_at|finished_at|updated_at):\s*['""]?(?<date>\d{4}-\d{2}-\d{2})")) {
+      try {
+        $candidateDate = [datetime]::ParseExact($dateMatch.Groups['date'].Value, 'yyyy-MM-dd', [Globalization.CultureInfo]::InvariantCulture)
+        if ($null -eq $latestVerificationDate -or $candidateDate -gt $latestVerificationDate) {
+          $latestVerificationDate = $candidateDate
+        }
+      } catch {
+      }
+    }
+    if ($null -ne $latestVerificationDate -and ($latestVerificationDate - $activeTaskUpdated).TotalDays -gt 7) {
+      Add-Issue -Level 'warning' -Message 'task.yaml active_task appears older than latest verification evidence; close out, refresh, or supersede the task head.' -File '.workflow/task.yaml'
+    }
+  } catch {
+    Add-Issue -Level 'warning' -Message 'task.yaml active_task has an unparsable updated_at date.' -File '.workflow/task.yaml'
+  }
 }
 if ($modelPolicy -and ($modelPolicy -notmatch 'default_model_alias:\s*opus' -or $modelPolicy -notmatch 'cheap_model_alias:\s*sonnet')) {
   Add-Issue -Level 'warning' -Message 'model_policy.yaml should define opus as the default Claude review alias and sonnet as the quota-saving alias.' -File '.workflow/model_policy.yaml'

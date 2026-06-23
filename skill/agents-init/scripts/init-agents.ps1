@@ -3,7 +3,7 @@ param(
   [Parameter(Mandatory = $true)]
   [string]$ProjectPath,
 
-  [ValidateSet('auto', 'init', 'adopt', 'upgrade', 'status', 'menu', 'register-main', 'recover', 'validate', 'doctor', 'pressure-test', 'orchestrate', 'route-intent', 'invoke-maestro-skill', 'dispatch-worker', 'ingest-receipt', 'save-state')]
+  [ValidateSet('auto', 'init', 'adopt', 'upgrade', 'status', 'menu', 'register-main', 'recover', 'validate', 'doctor', 'pressure-test', 'orchestrate', 'route-intent', 'invoke-maestro-skill', 'dispatch-worker', 'ingest-receipt', 'closeout-workflow', 'save-state')]
   [string]$Mode = 'auto',
 
   [string]$MainThreadId = '',
@@ -20,6 +20,19 @@ param(
   [string]$Query = '',
   [string]$Action = '',
   [string]$Id = '',
+
+  [ValidateSet('route_change', 'gate_change', 'direction_correction', 'handoff', 'promotion', 'archive_cleanup', 'receipt_ingest', 'task_closeout')]
+  [string]$CloseoutReason = 'route_change',
+  [string]$CloseoutTaskId = '',
+  [string]$CloseoutFromRoute = '',
+  [string]$CloseoutToRoute = '',
+  [string]$CloseoutAuthority = '',
+  [string]$CloseoutSuperseded = '',
+  [string]$CloseoutPromotedSpec = '',
+  [string]$CloseoutPromotedKnowhow = '',
+  [string]$CloseoutArchiveRef = '',
+  [string]$CloseoutOpenThreadId = '',
+  [switch]$CloseoutDryRun,
 
   [switch]$ApplyAgentEntry
 )
@@ -370,6 +383,7 @@ function Upgrade-AgentsInitV2 {
   $skippedLocal = New-Object System.Collections.Generic.List[string]
 
   $requiredNewFiles = @(
+    '.workflow\authority_index.yaml',
     '.workflow\memory_points.yaml',
     '.workflow\model_policy.yaml',
     '.workflow\templates\adoption_salvage_report.yaml',
@@ -387,6 +401,7 @@ function Upgrade-AgentsInitV2 {
     '.workflow\templates\task_brief.yaml',
     '.workflow\templates\ux_issue.yaml',
     '.workflow\templates\verification_receipt.yaml',
+    '.workflow\templates\workflow_closeout_receipt.yaml',
     'docs\dev-os\command-intent-map.md',
     'docs\dev-os\maestro-ralph-routing.md',
     'docs\dev-os\multi-codex-session-mode.md',
@@ -434,6 +449,7 @@ function Upgrade-AgentsInitV2 {
     '.workflow\templates\ux_issue.yaml',
     '.workflow\templates\verification_receipt.yaml',
     '.workflow\templates\worker_receipt.yaml',
+    '.workflow\templates\workflow_closeout_receipt.yaml',
     'docs\dev-os\command-intent-map.md',
     'docs\dev-os\maestro-ralph-routing.md',
     'docs\dev-os\multi-codex-session-mode.md',
@@ -848,6 +864,7 @@ if ($Mode -eq 'menu') {
       '$agents-init register-main',
       '$agents-init dispatch-worker',
       '$agents-init ingest-receipt',
+      '$agents-init closeout-workflow',
       '$agents-init invoke-maestro-skill',
       '$agents-init route-intent',
       '$agents-init self-update',
@@ -859,6 +876,7 @@ if ($Mode -eq 'menu') {
       'blueprint / old-project salvage plan',
       'plan / PM + FDE plan',
       'route-maestro / choose direct, worker, Maestro, or Ralph after gates are clear',
+      'closeout-workflow / record route, gate, direction, handoff, promotion, or archive cleanup closure',
       'invoke-maestro-skill / search spec, knowhow, wiki, KG, domain, workspace, msg, overlay, or delegate config'
     )
     script_examples = @(
@@ -874,6 +892,7 @@ if ($Mode -eq 'menu') {
       'powershell -NoProfile -ExecutionPolicy Bypass -File <skill>\scripts\update-agents-init.ps1 -ProjectPath <project>',
       'powershell -NoProfile -ExecutionPolicy Bypass -File <skill>\scripts\init-agents.ps1 -ProjectPath <project> -Mode dispatch-worker -TaskId T3 -Task "analyze old branch" -Scope "read-only docs"',
       'powershell -NoProfile -ExecutionPolicy Bypass -File <skill>\scripts\init-agents.ps1 -ProjectPath <project> -Mode ingest-receipt -ReceiptPath <receipt.yaml>',
+      'powershell -NoProfile -ExecutionPolicy Bypass -File <skill>\scripts\init-agents.ps1 -ProjectPath <project> -Mode closeout-workflow -CloseoutReason route_change -CloseoutTaskId T3',
       'powershell -NoProfile -ExecutionPolicy Bypass -File <skill>\scripts\init-agents.ps1 -ProjectPath <project> -Mode save-state',
       'powershell -NoProfile -ExecutionPolicy Bypass -File <skill>\scripts\init-agents.ps1 -ProjectPath <project> -Mode register-main -MainThreadId <thread-id>'
     )
@@ -991,6 +1010,16 @@ if ($Mode -eq 'ingest-receipt') {
     & $ingestScript -ProjectPath $project -ReceiptPath $ReceiptPath -Apply -Decision $ReceiptDecision -Json
   } else {
     & $ingestScript -ProjectPath $project -ReceiptPath $ReceiptPath -Json
+  }
+  exit $LASTEXITCODE
+}
+
+if ($Mode -eq 'closeout-workflow') {
+  $closeoutScript = Join-Path $PSScriptRoot 'closeout-workflow.ps1'
+  if ($CloseoutDryRun) {
+    & $closeoutScript -ProjectPath $project -Reason $CloseoutReason -TaskId $CloseoutTaskId -FromRoute $CloseoutFromRoute -ToRoute $CloseoutToRoute -CurrentAuthority $CloseoutAuthority -SupersededArtifact $CloseoutSuperseded -PromotedSpec $CloseoutPromotedSpec -PromotedKnowhow $CloseoutPromotedKnowhow -ArchiveRef $CloseoutArchiveRef -OpenThreadId $CloseoutOpenThreadId -DryRun -Json
+  } else {
+    & $closeoutScript -ProjectPath $project -Reason $CloseoutReason -TaskId $CloseoutTaskId -FromRoute $CloseoutFromRoute -ToRoute $CloseoutToRoute -CurrentAuthority $CloseoutAuthority -SupersededArtifact $CloseoutSuperseded -PromotedSpec $CloseoutPromotedSpec -PromotedKnowhow $CloseoutPromotedKnowhow -ArchiveRef $CloseoutArchiveRef -OpenThreadId $CloseoutOpenThreadId -Json
   }
   exit $LASTEXITCODE
 }

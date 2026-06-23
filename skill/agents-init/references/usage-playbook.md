@@ -52,6 +52,8 @@ When the user says a task "lost context", "I said this before", "this direction 
 
 Use a Document Triage Receipt when decisions changed mid-conversation, documents are unfinished, or old receipts/plans are scattered. The main agent must first classify artifacts as active, unresolved, superseded, archived, promoted, or rejected; then update `.workflow` and archive/promote the evidence. Do not create a new summary that leaves the old documents looking equally active.
 
+When the active route, gate, direction, handoff, promotion, or archive decision changes, run `closeout-workflow.ps1` or fill `.workflow/templates/workflow_closeout_receipt.yaml`. This records the lifecycle transaction in `.workflow/authority_index.yaml`, appends verification evidence, and refreshes `.workflow/session-recovery-brief.md`; it is not product acceptance.
+
 ## Keep V2 Simple
 
 For the next iteration, do not make the user configure a full multi-model role network.

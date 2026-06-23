@@ -19,6 +19,21 @@ function Read-TextOrEmpty {
   return ''
 }
 
+function Write-Utf8NoBom {
+  param(
+    [Parameter(Mandatory = $true)][string]$Path,
+    [Parameter(Mandatory = $true)][string]$Text
+  )
+  $parent = Split-Path -Parent $Path
+  if (-not (Test-Path -LiteralPath $parent -PathType Container)) {
+    New-Item -ItemType Directory -Path $parent -Force | Out-Null
+  }
+  $normalized = ($Text -replace "`r`n", "`n") -replace "`r", "`n"
+  $normalized = $normalized -replace "`n", "`r`n"
+  $encoding = New-Object System.Text.UTF8Encoding($false)
+  [System.IO.File]::WriteAllText($Path, $normalized, $encoding)
+}
+
 function Get-FirstMatch {
   param(
     [Parameter(Mandatory = $true)][string]$Text,
@@ -108,11 +123,7 @@ if ([string]::IsNullOrWhiteSpace($OutPath)) {
 
 $written = $null
 if (-not $NoWrite) {
-  $parent = Split-Path -Parent $OutPath
-  if (-not (Test-Path -LiteralPath $parent -PathType Container)) {
-    New-Item -ItemType Directory -Path $parent -Force | Out-Null
-  }
-  Set-Content -LiteralPath $OutPath -Value $brief -Encoding UTF8
+  Write-Utf8NoBom -Path $OutPath -Text $brief
   $written = (Resolve-Path -LiteralPath $OutPath).Path
 }
 

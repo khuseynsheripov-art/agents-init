@@ -153,6 +153,32 @@ foreach ($templateFile in $templateFiles) {
 }
 Assert-True ($missingTemplateValidation.Count -eq 0) ("validate-workflow.ps1 requiredFiles must cover every project template file. Missing: " + ($missingTemplateValidation -join ', '))
 
+$authorityIndexTemplatePath = Join-Path $skillRoot 'assets\project-template\.workflow\authority_index.yaml'
+Assert-True (Test-Path -LiteralPath $authorityIndexTemplatePath -PathType Leaf) 'agents-init must include authority_index.yaml as the canonical active/superseded/promoted artifact ledger.'
+$authorityIndexTemplate = Read-Text $authorityIndexTemplatePath
+Assert-True ($authorityIndexTemplate -match 'current_authority:' -and $authorityIndexTemplate -match 'active_evidence:' -and $authorityIndexTemplate -match 'superseded:' -and $authorityIndexTemplate -match 'promoted:' -and $authorityIndexTemplate -match 'archived:') 'authority_index.yaml must classify current authority, active evidence, superseded artifacts, promoted knowledge, and archives.'
+
+$workflowCloseoutTemplatePath = Join-Path $skillRoot 'assets\project-template\.workflow\templates\workflow_closeout_receipt.yaml'
+Assert-True (Test-Path -LiteralPath $workflowCloseoutTemplatePath -PathType Leaf) 'agents-init must include workflow_closeout_receipt.yaml for route/gate/direction/handoff/promotion closeout transactions.'
+$workflowCloseoutTemplate = Read-Text $workflowCloseoutTemplatePath
+foreach ($field in @('reason:', 'active_head_before:', 'active_head_after:', 'updated_heads:', 'authority_index_updates:', 'maestro_promotions:', 'session_recovery_update:', 'validation_status:', 'proves:', 'does_not_prove:')) {
+  Assert-True ($workflowCloseoutTemplate -match [regex]::Escape($field)) "workflow_closeout_receipt.yaml must include $field."
+}
+
+Assert-True ($validateWorkflowText -match '\.workflow/authority_index\.yaml' -and $validateWorkflowText -match '\.workflow/templates/workflow_closeout_receipt\.yaml') 'validate-workflow.ps1 must require authority_index.yaml and workflow_closeout_receipt.yaml.'
+Assert-True ($validateWorkflowText -match 'authority_index\.yaml should include current_authority' -and $validateWorkflowText -match 'workflow_closeout_receipt\.yaml must include') 'validate-workflow.ps1 must validate authority index and closeout receipt contract fields.'
+Assert-True ($validateWorkflowText -match 'session-recovery brief appears stale' -and $validateWorkflowText -match 'task.yaml active_task appears older than latest verification evidence') 'validate-workflow.ps1 must warn about stale recovery briefs and stale active tasks.'
+
+$closeoutWorkflowScript = Join-Path $skillRoot 'scripts\closeout-workflow.ps1'
+Assert-True (Test-Path -LiteralPath $closeoutWorkflowScript -PathType Leaf) 'agents-init must include closeout-workflow.ps1 to record lifecycle closeout transactions.'
+$closeoutWorkflowText = Read-Text $closeoutWorkflowScript
+Assert-True ($closeoutWorkflowText -match 'workflow_closeout_receipt' -and $closeoutWorkflowText -match 'authority_index' -and $closeoutWorkflowText -match 'verification\.yaml' -and $closeoutWorkflowText -match 'session-recovery') 'closeout-workflow.ps1 must write a closeout receipt, update authority_index/verification, and refresh session recovery.'
+Assert-True ($closeoutWorkflowText -match 'route_change' -and $closeoutWorkflowText -match 'direction_correction' -and $closeoutWorkflowText -match 'promotion' -and $closeoutWorkflowText -match 'archive_cleanup') 'closeout-workflow.ps1 must support route, correction, promotion, and archive cleanup reasons.'
+Assert-True ($closeoutWorkflowText -match 'does_not_prove' -and $closeoutWorkflowText -match 'not product acceptance') 'closeout-workflow.ps1 must preserve proof boundaries and not claim product acceptance.'
+
+$initAgentsText = Read-Text (Join-Path $skillRoot 'scripts\init-agents.ps1')
+Assert-True ($initAgentsText -match "'closeout-workflow'" -and $initAgentsText -match 'CloseoutReason' -and $initAgentsText -match 'closeout-workflow\.ps1') 'init-agents.ps1 must expose closeout-workflow mode through the wrapper.'
+
 $modelPolicyTemplate = Read-Text (Join-Path $skillRoot 'assets\project-template\.workflow\model_policy.yaml')
 Assert-True ($modelPolicyTemplate -match 'preferred_route: maestro_delegate_when_raw_output_proven' -and $modelPolicyTemplate -match 'cc2_profile_reference') 'model_policy template must encode Maestro delegate as preferred proven lifecycle and cc2 as a local profile reference/fallback.'
 

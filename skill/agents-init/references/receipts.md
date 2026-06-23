@@ -34,6 +34,8 @@ By default, `ingest-receipt.ps1` checks receipt shape and false-acceptance risks
 
 Applying a receipt does not judge product quality, UI taste, sample quality, or whether evidence is sufficient for the user's intent. The main agent must inspect artifacts first, then accept, reject, or request revision. `-Apply` records the main agent's decision; it does not replace the decision.
 
+Use `.workflow/templates/workflow_closeout_receipt.yaml` or `closeout-workflow.ps1` after a route, gate, direction, handoff, promotion, or archive cleanup changes the active workflow head. A closeout receipt updates `authority_index.yaml`, appends verification evidence, and refreshes the session-recovery brief. It is not product acceptance and does not prove Maestro promotion unless the promoted artifact is listed with separate evidence.
+
 For model or delegate receipts, inspect raw output, not only tool metadata. Accept the receipt only when:
 
 - `raw_output_checked` is true;
@@ -66,4 +68,5 @@ Use the project templates:
 .workflow/templates/sample_decision.yaml
 .workflow/templates/image_quality_review.yaml
 .workflow/templates/model_review_receipt.yaml
+.workflow/templates/workflow_closeout_receipt.yaml
 ```

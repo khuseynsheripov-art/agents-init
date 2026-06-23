@@ -108,7 +108,8 @@ Agents Init can help with:
 7. Claude/multi-model: build a compact packet, run a receipt-backed second view.
 8. UI/sample/image gate: require visible evidence and user acceptance.
 9. Self-update: pull latest agents-init and optionally upgrade this project.
-10. Save handoff: write recoverable state before compression or handoff.
+10. Closeout workflow: record route/gate/direction/handoff/promotion/archive transactions.
+11. Save handoff: write recoverable state before compression or handoff.
 ```
 
 If the user already gave a concrete intent, skip the menu and route the request.
@@ -134,6 +135,7 @@ These are reference actions for the main agent. Do not present them as the prima
 | `$agents-init register-main` | Register or update the active main Codex thread id. |
 | `$agents-init dispatch-worker` | Create/message one bounded worker with a receipt contract. |
 | `$agents-init ingest-receipt` | Accept/reject worker output and update `.workflow`. |
+| `$agents-init closeout-workflow` | Record a route, gate, direction, handoff, promotion, or archive cleanup closeout. |
 | `$agents-init route-maestro` | Choose direct, worker, Maestro, or Ralph. |
 | `$agents-init multi-model-packet` | Build a shared context packet for Claude/Codex/Maestro/Codex App review. |
 | `$agents-init invoke-maestro-skill` | Call Maestro spec/knowhow/search/KG/wiki/domain/workspace/msg/overlay/delegate-config and return receipt-shaped anchors. |
@@ -150,6 +152,7 @@ Natural language should route to the same actions. Examples:
 - "Analyze product/source/sample options" -> `sample_decision` plus research task
 - "The second-development branch failed; salvage the old project" -> `blueprint -> salvage -> insertion plan`
 - "Open sub-sessions to analyze separately" -> `dispatch-worker`
+- "This report changes the plan / close the old path" -> `closeout-workflow`
 - "Save state before compression" -> `save-state`
 - "This is a small clear task; do it directly" -> `direct`
 - "Update agents-init, then upgrade this project" -> `self-update -> optional project upgrade`
@@ -179,7 +182,7 @@ The main agent owns:
 - PM/FDE/UX/Data/Test/Workflow/Maestro/Risk synthesis;
 - worker or delegate dispatch;
 - receipt ingest;
-- `.workflow/current.yaml`, `task.yaml`, `open_threads.yaml`, `verification.yaml`, and `thread_registry.yaml`;
+- `.workflow/current.yaml`, `task.yaml`, `open_threads.yaml`, `verification.yaml`, `thread_registry.yaml`, and `authority_index.yaml`;
 - final judgment about what is proven.
 
 For non-trivial requests, the main agent must produce an orchestration decision before execution. Use `.workflow/templates/orchestration_decision.yaml` or an equivalent concise decision note.
@@ -187,12 +190,15 @@ For non-trivial requests, the main agent must produce an orchestration decision 
 That decision must include a knowledge lifecycle judgment. Do not keep appending documents by default. Decide what to overwrite, close, supersede, promote, index, or archive:
 
 - current task state stays in `.workflow/current.yaml` and `task.yaml`;
+- current document authority and supersession lives in `.workflow/authority_index.yaml`;
 - unresolved questions stay in `open_threads.yaml` until closed or superseded;
 - repeated corrections and direction changes become atomic `memory_points.yaml` entries;
 - stable reusable rules become Maestro `spec` entries;
 - reusable workflows, receipts, session compacts, and case lessons become Maestro `knowhow` entries;
 - code insertion, impact, and old-project salvage context should use Maestro `kg index/sync/search/context` when available;
 - raw worker/model transcripts are receipts or archive evidence, not active rules.
+
+When a route, gate, direction, handoff, promotion, or archive decision changes the active head, use `closeout-workflow.ps1` or `.workflow/templates/workflow_closeout_receipt.yaml`. The closeout records what changed in `.workflow/authority_index.yaml`, appends verification evidence, and refreshes `.workflow/session-recovery-brief.md`. It is a lifecycle receipt, not product acceptance.
 
 For fuzzy, long-running, old-project, UI/sample/image, Maestro/Codex-App, or multi-model requests, the decision must also include a multi-perspective review. Use `.workflow/templates/multi_perspective_review.yaml` or an equivalent concise note. The minimum views are PM, FDE, UX/visible acceptance, Workflow/context engineering, Maestro/Codex App orchestration, and Risk/over-engineering. A view is not valid unless it includes evidence, risk or objection, and next action.
 
@@ -296,6 +302,10 @@ powershell -NoProfile -ExecutionPolicy Bypass -File "<skill>\scripts\ingest-rece
 # apply an explicit main-agent receipt decision after artifact inspection
 powershell -NoProfile -ExecutionPolicy Bypass -File "<skill>\scripts\ingest-receipt.ps1" -ProjectPath "<project>" -ReceiptPath "<receipt.yaml>" -Apply -Decision accepted|rejected -Json
 powershell -NoProfile -ExecutionPolicy Bypass -File "<skill>\scripts\init-agents.ps1" -ProjectPath "<project>" -Mode ingest-receipt -ReceiptPath "<receipt.yaml>" -ApplyReceipt -ReceiptDecision accepted|rejected
+
+# record a main-agent lifecycle closeout after route/gate/direction/handoff/promotion/archive changes
+powershell -NoProfile -ExecutionPolicy Bypass -File "<skill>\scripts\closeout-workflow.ps1" -ProjectPath "<project>" -Reason route_change -TaskId "<task-id>" -Json
+powershell -NoProfile -ExecutionPolicy Bypass -File "<skill>\scripts\init-agents.ps1" -ProjectPath "<project>" -Mode closeout-workflow -CloseoutReason route_change -CloseoutTaskId "<task-id>"
 
 # write a session recovery brief before compression or handoff
 powershell -NoProfile -ExecutionPolicy Bypass -File "<skill>\scripts\save-state.ps1" -ProjectPath "<project>"

@@ -12,6 +12,7 @@ Use this reference when initializing, adopting, recovering, validating, or savin
 .workflow/verification.yaml
 .workflow/thread_registry.yaml
 .workflow/memory_points.yaml
+.workflow/authority_index.yaml
 ```
 
 ## `current.yaml`
@@ -98,6 +99,21 @@ Each memory point needs:
 
 Close or supersede memory points when the user changes direction. Promote stable reusable lessons to Maestro spec/knowhow instead of growing this file indefinitely.
 
+## `authority_index.yaml`
+
+This is the runtime authority ledger. It records which documents and receipts are current authority, active evidence, superseded, promoted, or archived.
+
+Required sections:
+
+- `current_authority`;
+- `active_evidence`;
+- `superseded`;
+- `promoted`;
+- `archived`;
+- `closeout_updates`.
+
+`docs/plans/index.yaml` may mirror this information for humans, but `.workflow/authority_index.yaml` is the source the next main agent should recover first.
+
 ## Document Lifecycle
 
 State files are working memory, not a history dump:
@@ -108,6 +124,7 @@ State files are working memory, not a history dump:
 | `task.yaml` | update queue/status/contracts, remove or park obsolete steps |
 | `open_threads.yaml` | close, merge, or supersede stale questions |
 | `memory_points.yaml` | keep atomic active corrections only |
+| `authority_index.yaml` | mark current authority, active evidence, superseded docs, promotions, and archives |
 | `verification.yaml` | append evidence, then summarize old evidence when it becomes noisy |
 | receipts/archive | keep raw worker/model outputs out of active rules |
 | Maestro spec | stable constraints |
@@ -115,6 +132,24 @@ State files are working memory, not a history dump:
 | Maestro KG/search | code graph, impact, insertion, and cross-source retrieval |
 
 An orchestration decision must say which layer is updated. If it only says "write another summary", the maintenance step is incomplete.
+
+## Workflow Closeout Receipt
+
+Use `.workflow/templates/workflow_closeout_receipt.yaml` or `closeout-workflow.ps1` when a route, gate, direction, handoff, promotion, receipt ingest, task closeout, or archive cleanup changes the active workflow head.
+
+The closeout receipt must name:
+
+- reason;
+- active head before and after;
+- updated heads;
+- authority index updates;
+- Maestro promotions, if any;
+- session recovery update;
+- validation status;
+- `proves`;
+- `does_not_prove`.
+
+The receipt records lifecycle closure. It does not prove product acceptance, UI/sample/generated-image acceptance, or business readiness.
 
 ## Document Triage Receipt
 

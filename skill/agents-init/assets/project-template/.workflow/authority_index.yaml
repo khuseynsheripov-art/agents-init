@@ -1,0 +1,30 @@
+authority_index:
+  version: 1
+  purpose: "Canonical ledger for which workflow artifacts are active authority, evidence, superseded, promoted, or archived."
+  source_of_truth:
+    - ".workflow/current.yaml"
+    - ".workflow/task.yaml"
+    - ".workflow/open_threads.yaml"
+    - ".workflow/verification.yaml"
+    - ".workflow/thread_registry.yaml"
+    - ".workflow/memory_points.yaml"
+  current_authority:
+    - artifact: ".workflow/current.yaml"
+      status: current
+      reason: "Active workflow head."
+    - artifact: ".workflow/task.yaml"
+      status: current
+      reason: "Active task queue and PM/FDE contracts."
+  active_evidence:
+    - artifact: ".workflow/verification.yaml"
+      status: active_evidence
+      reason: "Current proof head; raw historical output should be archived."
+  superseded: []
+  promoted: []
+  archived: []
+  closeout_updates: []
+  rules:
+    - "Docs/plans/index.yaml may mirror this ledger, but .workflow/authority_index.yaml is the runtime authority source."
+    - "Do not leave old plans equally active after a route, gate, or direction change."
+    - "Promote stable lessons to Maestro spec/knowhow instead of growing workflow files forever."
+    - "Archived receipts need restore or trace pointers."
