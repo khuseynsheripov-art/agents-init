@@ -74,6 +74,16 @@ The main agent must:
 5. Close/archive one-shot workers when tools allow.
 6. For continuous sessions, update last receipt and retire/supersede if the scope changed.
 
+Use receipt ingest in two phases:
+
+- Shape check: `ingest-receipt.ps1 -ProjectPath <project> -ReceiptPath <receipt.yaml> -Json` reports whether the receipt is eligible for main-agent review. It does not accept the work.
+- Explicit apply: after artifact inspection and a main-agent decision, use `ingest-receipt.ps1 -Apply -Decision accepted|rejected` with the project and receipt path, or the full form `ingest-receipt.ps1 -ProjectPath <project> -ReceiptPath <receipt.yaml> -Apply -Decision accepted|rejected -Json`.
+- Wrapper path: `init-agents.ps1 -ProjectPath <project> -Mode ingest-receipt -ReceiptPath <receipt.yaml> -ApplyReceipt -ReceiptDecision accepted|rejected`.
+
+Applying a receipt appends decision evidence to `verification.yaml` and updates the matching worker/delegate/model record in `thread_registry.yaml` with receipt status, receipt path, and main-agent decision time when a matching actor id is present.
+
+Receipt apply records the main-agent receipt decision; it does not replace UI/sample/business human gates, artifact inspection, product direction judgment, or user-visible acceptance evidence.
+
 ## Waiting And Status Updates
 
 Worker dispatch is not a fixed-interval recall loop. After the main agent sends one bounded worker task, the normal path is natural completion: wait for the worker receipt or for the user to ask for status.

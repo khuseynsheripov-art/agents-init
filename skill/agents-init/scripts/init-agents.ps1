@@ -12,6 +12,9 @@ param(
   [string]$Task = '',
   [string]$Scope = '',
   [string]$ReceiptPath = '',
+  [switch]$ApplyReceipt,
+  [ValidateSet('accepted', 'rejected')]
+  [string]$ReceiptDecision = 'accepted',
   [ValidateSet('diagnose', 'search', 'spec', 'knowhow', 'wiki', 'kg', 'domain', 'workspace', 'msg', 'overlay', 'delegate-config')]
   [string]$MaestroSkill = 'search',
   [string]$Query = '',
@@ -984,7 +987,11 @@ if ($Mode -eq 'ingest-receipt') {
     throw "Mode ingest-receipt requires -ReceiptPath."
   }
   $ingestScript = Join-Path $PSScriptRoot 'ingest-receipt.ps1'
-  & $ingestScript -ProjectPath $project -ReceiptPath $ReceiptPath -Json
+  if ($ApplyReceipt) {
+    & $ingestScript -ProjectPath $project -ReceiptPath $ReceiptPath -Apply -Decision $ReceiptDecision -Json
+  } else {
+    & $ingestScript -ProjectPath $project -ReceiptPath $ReceiptPath -Json
+  }
   exit $LASTEXITCODE
 }
 

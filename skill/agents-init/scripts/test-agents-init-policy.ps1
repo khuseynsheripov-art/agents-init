@@ -112,12 +112,15 @@ Assert-True ($routeIntent -match 'maestro ralph skills --platform codex --json -
 
 $codexThreadProtocol = Read-Text (Join-Path $skillRoot 'references\codex-thread-protocol.md')
 Assert-True ($codexThreadProtocol -match 'Do not fixed-interval poll' -and $codexThreadProtocol -match 'natural completion' -and $codexThreadProtocol -match 'user asks for status') 'Codex thread protocol must forbid fixed-interval worker polling and prefer natural completion/status-on-demand.'
+Assert-True ($codexThreadProtocol -match 'ingest-receipt\.ps1 -Apply -Decision accepted\|rejected' -and $codexThreadProtocol -match 'verification\.yaml' -and $codexThreadProtocol -match 'thread_registry\.yaml' -and $codexThreadProtocol -match 'does not replace UI/sample/business') 'Codex thread protocol must document explicit receipt apply behavior and its human-gate boundary.'
 
 $multiCodexSessionDoc = Read-Text (Join-Path $skillRoot 'assets\project-template\docs\dev-os\multi-codex-session-mode.md')
 Assert-True ($multiCodexSessionDoc -match 'No fixed-interval recall' -and $multiCodexSessionDoc -match 'wait for the worker receipt') 'Project docs must tell main agents not to create 30-second recall loops for worker threads.'
+Assert-True ($multiCodexSessionDoc -match 'ingest-receipt\.ps1 -Apply -Decision accepted\|rejected' -and $multiCodexSessionDoc -match 'init-agents\.ps1.*-ApplyReceipt' -and $multiCodexSessionDoc -match 'does not replace artifact inspection or human-gated acceptance') 'Project multi-session docs must show the receipt apply command and boundary.'
 
 $skillEntry = Read-Text (Join-Path $skillRoot 'SKILL.md')
 Assert-True ($skillEntry -match 'no fixed-interval recall' -and $skillEntry -match 'natural completion' -and $skillEntry -match 'wait for the receipt') 'SKILL.md top-level worker guidance must forbid fixed-interval recall loops and prefer natural completion.'
+Assert-True ($skillEntry -match 'ingest-receipt\.ps1.*-Apply.*-Decision accepted\|rejected' -and $skillEntry -match 'ApplyReceipt' -and $skillEntry -match 'main-agent receipt decision') 'SKILL.md must expose the receipt apply path without implying shape-check equals acceptance.'
 Assert-True ($skillEntry -match 'Maestro skills are not Claude delegate' -and $skillEntry -match 'spec/knowhow/search/KG/wiki/domain/workspace/msg/overlay' -and $skillEntry -match 'invoke-maestro-skill.ps1') 'SKILL.md must make non-Claude Maestro skills a first-class orchestration path, not hide behind Claude delegate.'
 Assert-True ($skillEntry -match 'Project-level Maestro Codex skills' -and $skillEntry -match 'maestro ralph skills --platform codex --json' -and $skillEntry -match 'read the selected project skill''s SKILL.md' -and $skillEntry -match 'Registry discovery alone is not execution') 'SKILL.md must distinguish Maestro CLI knowledge surfaces from project-level Maestro Codex skill invocation and forbid treating registry discovery alone as execution.'
 
@@ -401,6 +404,94 @@ history: []
     $tmpBase = [System.IO.Path]::GetTempPath()
     if ($resolvedLifecycleTmp.StartsWith($tmpBase, [System.StringComparison]::OrdinalIgnoreCase)) {
       Remove-Item -LiteralPath $resolvedLifecycleTmp -Recurse -Force
+    }
+  }
+}
+
+$receiptApplyRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("agents-init-receipt-apply-test-" + [guid]::NewGuid().ToString('N'))
+try {
+  Copy-Item -LiteralPath $templateRoot -Destination $receiptApplyRoot -Recurse
+
+  @'
+protocol_version: 1
+main_thread:
+  id: main
+  role: main_agent_orchestrator
+  status: active
+workers:
+- id: worker-apply
+  source: codex_app
+  lifecycle: one_shot
+  type: disposable_worker
+  role: test_worker
+  task_id: APPLY-RECEIPT-001
+  scope: "fixture"
+  status: receipt_returned
+  receipt_status: pending
+  receipt_path: ""
+  accepted_by_main_at: ""
+  close_reason: ""
+history: []
+'@ | Set-Content -LiteralPath (Join-Path $receiptApplyRoot '.workflow\thread_registry.yaml') -Encoding UTF8
+
+  $receiptPath = Join-Path $receiptApplyRoot '.workflow\worker-apply-receipt.yaml'
+  @'
+task_id: APPLY-RECEIPT-001
+worker_id: worker-apply
+worker_thread_id: worker-apply
+lifecycle: one_shot
+status: done
+receipt_status: submitted
+scope: "fixture"
+files_read:
+  - skill/agents-init/scripts/ingest-receipt.ps1
+files_changed: []
+commands_run:
+  - command: "fixture command"
+    exit_code: 0
+thread_actions:
+  created: false
+artifact:
+  - .workflow/worker-apply-receipt.yaml
+evidence:
+  - "fixture evidence"
+proves:
+  - "receipt apply fixture can be accepted"
+decisions:
+  locked: []
+  proposed: []
+open_threads: []
+does_not_prove:
+  - "UI acceptance"
+risks:
+  - "fixture only"
+next_recommended_step:
+  - "continue"
+'@ | Set-Content -LiteralPath $receiptPath -Encoding UTF8
+
+  $ingestScript = Join-Path $skillRoot 'scripts\ingest-receipt.ps1'
+  $applyJson = & powershell -NoProfile -ExecutionPolicy Bypass -File $ingestScript -ProjectPath $receiptApplyRoot -ReceiptPath $receiptPath -Apply -Decision accepted -Json
+  Assert-True ($LASTEXITCODE -eq 0) "ingest-receipt.ps1 -Apply must exit 0 for a valid accepted receipt. Output: $applyJson"
+  $applyResult = $applyJson | ConvertFrom-Json
+  Assert-True ($applyResult.applied -eq $true) 'ingest-receipt.ps1 -Apply must report applied=true.'
+
+  $appliedVerification = Read-Text (Join-Path $receiptApplyRoot '.workflow\verification.yaml')
+  $appliedRegistry = Read-Text (Join-Path $receiptApplyRoot '.workflow\thread_registry.yaml')
+  Assert-True ($appliedVerification -match 'APPLY-RECEIPT-001' -and $appliedVerification -match 'receipt apply fixture can be accepted' -and $appliedVerification -match 'UI acceptance') 'Receipt apply must append task id, proves, and does_not_prove to verification.yaml.'
+  Assert-True ($appliedRegistry -match 'id: worker-apply' -and $appliedRegistry -match 'status: receipt_accepted' -and $appliedRegistry -match 'receipt_status: accepted_by_main' -and $appliedRegistry -match 'accepted_by_main_at:') 'Receipt apply must update the matching worker record in thread_registry.yaml.'
+  Assert-True ($appliedRegistry -match 'worker-apply-receipt.yaml') 'Receipt apply must record the accepted receipt path in thread_registry.yaml.'
+
+  $initWrapperScript = Join-Path $skillRoot 'scripts\init-agents.ps1'
+  $wrapperJson = & powershell -NoProfile -ExecutionPolicy Bypass -File $initWrapperScript -ProjectPath $receiptApplyRoot -Mode ingest-receipt -ReceiptPath $receiptPath -ApplyReceipt -ReceiptDecision accepted
+  Assert-True ($LASTEXITCODE -eq 0) "init-agents.ps1 -Mode ingest-receipt must expose receipt apply. Output: $wrapperJson"
+  $wrapperResult = $wrapperJson | ConvertFrom-Json
+  Assert-True ($wrapperResult.applied -eq $true) 'init-agents.ps1 wrapper must pass receipt apply through to ingest-receipt.ps1.'
+} finally {
+  if (Test-Path -LiteralPath $receiptApplyRoot -PathType Container) {
+    $resolvedReceiptTmp = (Resolve-Path -LiteralPath $receiptApplyRoot).Path
+    $tmpBase = [System.IO.Path]::GetTempPath()
+    if ($resolvedReceiptTmp.StartsWith($tmpBase, [System.StringComparison]::OrdinalIgnoreCase)) {
+      Remove-Item -LiteralPath $resolvedReceiptTmp -Recurse -Force
     }
   }
 }

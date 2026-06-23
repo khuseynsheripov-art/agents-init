@@ -49,3 +49,13 @@ If the worker is still running, say that plainly and keep waiting. Do not count 
 If a new main session takes over, it must read `.workflow/thread_registry.yaml`, mark old main ids as historical/superseded when appropriate, and register itself as active if a real id is available.
 
 Use `ingest-receipt.ps1` as a shape check. Passing the script means the receipt is eligible for main-agent review; it does not mean the output is accepted.
+
+After the main agent inspects artifacts and decides, apply the decision explicitly:
+
+```powershell
+# short form: ingest-receipt.ps1 -Apply -Decision accepted|rejected
+powershell -NoProfile -ExecutionPolicy Bypass -File "<skill>\scripts\ingest-receipt.ps1" -ProjectPath "<project>" -ReceiptPath "<receipt.yaml>" -Apply -Decision accepted|rejected -Json
+powershell -NoProfile -ExecutionPolicy Bypass -File "<skill>\scripts\init-agents.ps1" -ProjectPath "<project>" -Mode ingest-receipt -ReceiptPath "<receipt.yaml>" -ApplyReceipt -ReceiptDecision accepted|rejected
+```
+
+Applying a receipt appends verification evidence and updates the matching thread registry record. It does not replace artifact inspection or human-gated acceptance.

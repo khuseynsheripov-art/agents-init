@@ -293,6 +293,10 @@ powershell -NoProfile -ExecutionPolicy Bypass -File "<skill>\scripts\make-worker
 # check whether a worker/delegate receipt is eligible for main-agent acceptance
 powershell -NoProfile -ExecutionPolicy Bypass -File "<skill>\scripts\ingest-receipt.ps1" -ProjectPath "<project>" -ReceiptPath "<receipt.yaml>"
 
+# apply an explicit main-agent receipt decision after artifact inspection
+powershell -NoProfile -ExecutionPolicy Bypass -File "<skill>\scripts\ingest-receipt.ps1" -ProjectPath "<project>" -ReceiptPath "<receipt.yaml>" -Apply -Decision accepted|rejected -Json
+powershell -NoProfile -ExecutionPolicy Bypass -File "<skill>\scripts\init-agents.ps1" -ProjectPath "<project>" -Mode ingest-receipt -ReceiptPath "<receipt.yaml>" -ApplyReceipt -ReceiptDecision accepted|rejected
+
 # write a session recovery brief before compression or handoff
 powershell -NoProfile -ExecutionPolicy Bypass -File "<skill>\scripts\save-state.ps1" -ProjectPath "<project>"
 ```

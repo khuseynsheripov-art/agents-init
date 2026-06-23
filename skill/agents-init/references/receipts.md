@@ -30,7 +30,9 @@ Every worker/delegate receipt needs:
 - human-gated claims are not marked accepted without user-visible evidence and user confirmation;
 - `.workflow` updates are clear.
 
-`ingest-receipt.ps1` only checks receipt shape and false-acceptance risks. It cannot judge product quality, UI taste, sample quality, or whether evidence is sufficient for the user's intent. The main agent must inspect artifacts and then accept, reject, or request revision.
+By default, `ingest-receipt.ps1` checks receipt shape and false-acceptance risks only. With an explicit main-agent decision, `ingest-receipt.ps1 -Apply -Decision accepted|rejected` can write that decision back into workflow state by appending verification evidence and updating matching thread/delegate registry records.
+
+Applying a receipt does not judge product quality, UI taste, sample quality, or whether evidence is sufficient for the user's intent. The main agent must inspect artifacts first, then accept, reject, or request revision. `-Apply` records the main agent's decision; it does not replace the decision.
 
 For model or delegate receipts, inspect raw output, not only tool metadata. Accept the receipt only when:
 
