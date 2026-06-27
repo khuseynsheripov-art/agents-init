@@ -88,7 +88,7 @@ function Update-ThreadIdInFile {
     param($match)
     $match.Groups[1].Value + 'user_provided'
   })
-  Set-Content -LiteralPath $Path -Value $text -Encoding UTF8
+  Write-Utf8NoBom -Path $Path -Text $text
   return $true
 }
 
@@ -133,7 +133,7 @@ function Update-MainThreadRegistry {
     param($match)
     $match.Groups[1].Value + 'user_provided'
   })
-  Set-Content -LiteralPath $Path -Value $text -Encoding UTF8
+  Write-Utf8NoBom -Path $Path -Text $text
   return $true
 }
 
@@ -158,10 +158,19 @@ function Update-FileIfChanged {
   )
   $old = if (Test-Path -LiteralPath $Path -PathType Leaf) { Get-Content -Raw -Encoding UTF8 -LiteralPath $Path } else { '' }
   if ($old -ne $Text) {
-    Set-Content -LiteralPath $Path -Value $Text -Encoding UTF8
+    Write-Utf8NoBom -Path $Path -Text $Text
     return $true
   }
   return $false
+}
+
+function Write-Utf8NoBom {
+  param(
+    [Parameter(Mandatory = $true)][string]$Path,
+    [Parameter(Mandatory = $true)][string]$Text
+  )
+  $encoding = [System.Text.UTF8Encoding]::new($false)
+  [System.IO.File]::WriteAllText($Path, $Text, $encoding)
 }
 
 function Test-LikelyMojibake {
@@ -399,6 +408,14 @@ function Upgrade-AgentsInitV2 {
     '.workflow\templates\sample_decision.yaml',
     '.workflow\templates\session_recovery_brief.md',
     '.workflow\templates\task_brief.yaml',
+    '.workflow\templates\task_packet.yaml',
+    '.workflow\templates\branch_plan.yaml',
+    '.workflow\templates\branch_completion_notice.yaml',
+    '.workflow\templates\cross_project_data_packet.yaml',
+    '.workflow\templates\chairman_brief.yaml',
+    '.workflow\templates\parked_waiting_next_packet.yaml',
+    '.workflow\templates\evidence_exhaustion_check.yaml',
+    '.workflow\templates\evidence_digest.yaml',
     '.workflow\templates\ux_issue.yaml',
     '.workflow\templates\verification_receipt.yaml',
     '.workflow\templates\workflow_closeout_receipt.yaml',
@@ -446,6 +463,14 @@ function Upgrade-AgentsInitV2 {
     '.workflow\templates\sample_decision.yaml',
     '.workflow\templates\session_recovery_brief.md',
     '.workflow\templates\task_brief.yaml',
+    '.workflow\templates\task_packet.yaml',
+    '.workflow\templates\branch_plan.yaml',
+    '.workflow\templates\branch_completion_notice.yaml',
+    '.workflow\templates\cross_project_data_packet.yaml',
+    '.workflow\templates\chairman_brief.yaml',
+    '.workflow\templates\parked_waiting_next_packet.yaml',
+    '.workflow\templates\evidence_exhaustion_check.yaml',
+    '.workflow\templates\evidence_digest.yaml',
     '.workflow\templates\ux_issue.yaml',
     '.workflow\templates\verification_receipt.yaml',
     '.workflow\templates\worker_receipt.yaml',
@@ -467,6 +492,15 @@ function Upgrade-AgentsInitV2 {
         $updated.Add($relative)
       }
     }
+  }
+
+  # Managed templates are refreshed from source above. Older compatibility
+  # migrations used broad regex patches over live workflow files; real projects
+  # can make those expensive and they are no longer needed for managed heads.
+  return [ordered]@{
+    created = @($createdLocal)
+    updated = @($updated)
+    skipped_existing = @($skippedLocal)
   }
 
   $orchPath = Join-Path $Project '.workflow\templates\orchestration_decision.yaml'
@@ -834,9 +868,11 @@ if ($Mode -eq 'menu') {
       'Clarify fuzzy intent: restate intent, find uncertainty, ask 1-3 upstream questions.',
       'Plan/blueprint: PM + FDE plan, old-project salvage, insertion plan.',
       'Workers: dispatch bounded Codex workers and ingest receipts.',
+      'Main/worktree orchestration: optional agents-init main shortcut, task packets, branch plans, completion notices, data packets, user brief, and parked branch state.',
       'Maestro/Ralph: route lifecycle/delegate work after gates are clear.',
       'Claude/multi-model: build a compact packet, run a receipt-backed second view.',
       'UI/sample/image gate: require visible evidence and user acceptance.',
+      'Evidence hygiene: guard high-risk compression or absence claims with negative searches and not-read gaps.',
       'Self-update: pull latest agents-init and optionally upgrade this project.',
       'Save handoff: write recoverable state before compression or handoff.'
     )
@@ -847,6 +883,8 @@ if ($Mode -eq 'menu') {
       'This old project/worktree failed; do salvage and insertion plan first.',
       'Update agents-init, then upgrade this project workflow.',
       'Open two bounded workers to inspect logs and docs separately.',
+      'Enter main orchestration and propose whether this needs worktrees before creating them.',
+      'This branch returned completion_notice/data_packet; ingest it and prepare a user brief.',
       'Ask Claude to challenge this plan, but recover context first.'
     )
     state_files = [ordered]@{
@@ -861,6 +899,7 @@ if ($Mode -eq 'menu') {
       '$agents-init validate',
       '$agents-init pressure-test',
       '$agents-init orchestrate',
+      '$agents-init main',
       '$agents-init register-main',
       '$agents-init dispatch-worker',
       '$agents-init ingest-receipt',

@@ -11,6 +11,7 @@ continuous session = reusable role or MVP context, one bounded task at a time
 disposable worker = default one-shot session
 durable role session = continuous session for repeated bounded work in one role/domain
 mvp session = continuous session for one visible product slice
+branch actor = worktree/session owner for one bounded task_packet
 ```
 
 Workers do not decide product direction.
@@ -25,6 +26,10 @@ Decide lifecycle before dispatch:
 | continuous | repeated UX/sample/codebase/QA/knowledge role or MVP slice | may keep scoped notes under `.workflow/roles/<role_id>/`; still returns one receipt per task | retire or supersede when scope changes |
 
 Default to `one_shot`. Use `continuous` only when role history prevents real repeated setup or memory loss.
+
+Use branch packet lifecycle only for dynamic main/multi-worktree orchestration. Ordinary bounded workers can return `worker_receipt.yaml` without `task_packet -> branch_plan -> completion_notice -> data_packet -> chairman_brief -> parked_waiting_next_packet`.
+
+For branch actors, `completion_notice` is not acceptance. The branch normally enters `parked_waiting_next_packet` after returning a receipt/data packet until the main agent ingests it and issues a new packet or archives the branch.
 
 ## Before Dispatch
 

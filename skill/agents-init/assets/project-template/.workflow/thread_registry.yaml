@@ -5,6 +5,19 @@ main_thread:
   id: current
   source: placeholder
   role: main_agent_orchestrator
+  generation: 1
+  parent_main_id: ""
+  takeover_reason: initial | user_requested | context_compression | system_error | gate_change | handoff | unknown
+  manages_worktrees: false
+  active_worktree_id: ""
+  recovered_from_packet: ""
+  authority_scope:
+    - user_confirmation_gates
+    - task_order
+    - .workflow/current.yaml
+    - .workflow/task.yaml
+    - .workflow/open_threads.yaml
+    - .workflow/verification.yaml
   owns:
     - user_confirmation_gates
     - task_order
@@ -17,6 +30,8 @@ main_thread:
 
 workers: []
 archived_workers: []
+worktrees: []
+branch_actors: []
 
 receipt_template: .workflow/templates/worker_receipt.yaml
 
@@ -27,34 +42,55 @@ worker_lifecycle:
   allowed_status:
     - proposed
     - registered
+    - planned
+    - dispatched
     - sent
     - active
     - running
+    - waiting_receipt
     - no_output
     - interrupted
     - restarted
     - receipt_returned
+    - completion_notice_returned
+    - ready_for_main_review
     - receipt_accepted
     - receipt_rejected
+    - revision_requested
+    - parked_waiting_next_packet
+    - merge_pending
+    - merged
+    - abandoned
     - archived
     - blocked
   allowed_transitions:
     proposed: [registered, blocked]
-    registered: [sent, active, blocked, archived]
-    sent: [active, running, receipt_returned, no_output, blocked]
-    active: [running, receipt_returned, no_output, interrupted, blocked]
-    running: [receipt_returned, no_output, interrupted, blocked]
+    registered: [planned, dispatched, sent, active, blocked, archived]
+    planned: [dispatched, sent, active, blocked, archived]
+    dispatched: [active, running, waiting_receipt, no_output, blocked]
+    sent: [active, running, waiting_receipt, receipt_returned, no_output, blocked]
+    active: [running, waiting_receipt, receipt_returned, completion_notice_returned, no_output, interrupted, blocked]
+    running: [waiting_receipt, receipt_returned, completion_notice_returned, no_output, interrupted, blocked]
+    waiting_receipt: [receipt_returned, completion_notice_returned, no_output, interrupted, blocked]
     no_output: [restarted, blocked, archived]
     interrupted: [restarted, blocked, archived]
     restarted: [sent, active, running, blocked]
-    receipt_returned: [receipt_accepted, receipt_rejected, blocked]
-    receipt_accepted: [archived]
-    receipt_rejected: [registered, archived, blocked]
+    receipt_returned: [ready_for_main_review, receipt_accepted, receipt_rejected, blocked]
+    completion_notice_returned: [ready_for_main_review, revision_requested, parked_waiting_next_packet, blocked]
+    ready_for_main_review: [receipt_accepted, receipt_rejected, revision_requested, merge_pending, parked_waiting_next_packet, blocked]
+    receipt_accepted: [parked_waiting_next_packet, merge_pending, archived]
+    receipt_rejected: [registered, revision_requested, archived, blocked]
+    revision_requested: [sent, active, running, blocked]
+    parked_waiting_next_packet: [sent, active, archived, blocked]
+    merge_pending: [merged, blocked, archived]
+    merged: [archived]
+    abandoned: [archived]
     blocked: [registered, archived]
     archived: []
   default_lifecycle: one_shot
   default_type: disposable_worker
   continuous_rule: "Only use continuous sessions for repeated role or MVP context; still require one receipt per bounded task."
+  parked_rule: "parked_waiting_next_packet is a normal waiting state after a bounded branch task; it is not product acceptance, merge readiness, or failure."
 
 rules:
   - Main agent decides product direction; workers do not.
@@ -64,16 +100,30 @@ rules:
   - no_output/interrupted/restarted records require close_reason and next_action before the main agent may count the task as handled.
   - Main agent must read receipts and update .workflow before continuing.
   - Codex App thread IDs may be added when thread tools are used.
+  - Branch actors must not start the next bounded task without a new task_packet.
+  - completion_notice is not acceptance; main-agent ingest and, when needed, chairman_brief are required before continuing.
 
 worker_record_template:
   id: "<codex-thread-id-or-maestro-delegate-id>"
+  parent_main_id: current
   source: codex_app | maestro_delegate | native_subagent | user_provided
   lifecycle: one_shot | continuous
   type: disposable_worker | durable_role_session | mvp_session | maestro_delegate | native_subagent
   role: worker
   task_id: ""
+  task_packet_path: ""
+  branch_plan_path: ""
+  expected_completion_notice: false
+  completion_notice_path: ""
+  data_packet_paths: []
+  parked_packet_path: ""
+  worktree_id: ""
   scope: ""
   worktree: ""
+  branch: ""
+  base_sha: ""
+  head_sha: ""
+  merge_target: ""
   may_edit: []
   conflicts_with: []
   must_not_edit:
@@ -89,6 +139,57 @@ worker_record_template:
   accepted_by_main_at: ""
   archive_required: true
   role_notes_path: ""
+  lease_id: ""
+  lease_expires_at: ""
   created_at: ""
   last_active_at: ""
   closed_at: ""
+
+worktree_record_template:
+  worktree_id: ""
+  path: ""
+  repo_root: ""
+  branch: ""
+  base_branch: ""
+  base_sha: ""
+  head_sha: ""
+  merge_target: ""
+  remote: ""
+  upstream: ""
+  dirty_state: clean | dirty | unknown
+  dirty_state_unknown_reason: ""
+  active_main_thread_id: current
+  owning_task_id: ""
+  branch_plan_path: ""
+  completion_notice_path: ""
+  parked_packet_path: ""
+  status: proposed | active | ready_for_main_review | parked_waiting_next_packet | merge_pending | merged | abandoned | blocked
+  gate: ""
+  human_gate_status: not_needed | pending | accepted | rejected | blocked
+  owned_paths: []
+  conflict_set: []
+  lease_id: ""
+  lease_expires_at: ""
+
+branch_actor_record_template:
+  id: ""
+  source: codex_app | worktree_main | maestro_delegate | native_subagent
+  parent_main_id: current
+  worktree_id: ""
+  worktree: ""
+  branch: ""
+  task_id: ""
+  task_packet_path: ""
+  branch_plan_path: ""
+  completion_notice_path: ""
+  receipt_path: ""
+  data_packet_paths: []
+  parked_packet_path: ""
+  status: awaiting_task_packet | planning | running | completion_notice_returned | ready_for_main_review | receipt_accepted | receipt_rejected | revision_requested | parked_waiting_next_packet | archived | blocked
+  report_to: current
+  may_edit: []
+  must_not_edit:
+    - .workflow/current.yaml
+    - .workflow/task.yaml
+  conflicts_with: []
+  next_action: ""

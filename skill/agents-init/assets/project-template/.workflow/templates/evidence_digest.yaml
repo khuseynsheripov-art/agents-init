@@ -1,0 +1,32 @@
+evidence_digest:
+  id: ""
+  created_at: ""
+  status: draft | active | superseded | archived
+  source_task_id: ""
+  branch_actor_id: ""
+  reason: compression | handoff | branch_resume | evidence_heavy_work | receipt_ingest
+  summary:
+    current_question: ""
+    current_decision_head: ""
+    safe_next_slice: ""
+  evidence_index:
+    - source: ""
+      type: file | receipt | packet | command | browser | log | note
+      summary: ""
+      why_relevant: ""
+      proves: []
+      does_not_prove: []
+  not_read_open_gap:
+    - area: ""
+      risk: ""
+      next_if_needed: ""
+  raw_evidence_location:
+    - ""
+  model_context_budget:
+    include_now:
+      - ""
+    keep_out_of_context:
+      - ""
+  next_action: ""
+  does_not_prove:
+    - "Digest is a navigation aid, not a substitute for opening required evidence before acceptance."

@@ -14,11 +14,13 @@ The user should not memorize commands. The main agent maps natural language to o
 | "ask Claude to challenge this plan" | create compact packet, run `cc2` or proven Maestro delegate, ingest model receipt |
 | "keep Claude as architecture reviewer" | create/record bounded `cc2` continuous session with retire rule |
 | "open several Codex sessions" | create/use Codex App one-shot or continuous role sessions |
+| "enter main orchestration / agents-init main" | recover state, decide whether multi-worktree orchestration is needed, then propose topology and task packets before creating branches |
 | "run analysis async" | use Maestro delegate `--async` if route works, otherwise Codex worker or direct `cc2` one-shot |
 | "record this for the team/role" | use Maestro `msg` as coordination ledger |
 | "remember this rule for later" | memory point now, promote stable rule to Maestro spec/knowhow |
 | "stop piling up docs / maintain the docs" | run knowledge lifecycle: update, close, supersede, promote, index, archive |
 | "how should the old project fit in" | recover + KG/search/code anchors + insertion plan before implementation |
+| "evidence not fully read / rg found nothing" | use context hygiene guardrail; record methods, negative_searches, not_read_open_gap, and what remains unproven |
 
 ## Recommended Daily Pattern
 
@@ -76,6 +78,18 @@ recover mainline -> diagnose drift -> disclose consequence -> ask the smallest u
 ```
 
 The command menu, templates, Maestro surfaces, and Claude modes are support machinery. They should stay behind the main-agent loop unless the current gate actually needs them.
+
+## Dynamic Main Pattern
+
+The user does not need to switch habits to `agents-init main`. Treat that phrase as an optional shortcut. Natural language or plain `agents-init` should still enter the same recovered decision loop.
+
+Use dynamic main/worktree orchestration only after goal and module boundaries are understood. The generic branch loop is:
+
+```text
+task_packet -> branch_plan -> completion_notice -> data_packet -> chairman_brief -> parked_waiting_next_packet
+```
+
+Do not create worktrees blindly, and do not copy project-specific lanes from another project. Worktree creation, main registration, and branch parking are control-plane facts; they do not prove implementation, merge readiness, UI/sample acceptance, business readiness, or external-write approval.
 
 ## Self Update Pattern
 

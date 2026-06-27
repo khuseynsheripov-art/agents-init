@@ -1,0 +1,56 @@
+packet_id: ""
+created_at: ""
+status: draft | submitted | accepted_by_orchestrator | rejected_by_orchestrator | superseded
+producer_project: ""
+producer_branch_actor_id: ""
+consumer_project: ""
+source_task_id: ""
+orchestrator_thread: ""
+orchestrator_decision_required: true
+
+data_contract:
+  name: ""
+  version: ""
+  status: draft | proposed | accepted | rejected | superseded
+  owner: main_agent
+
+payload_summary: []
+payload_index:
+  - id: ""
+    type: file | receipt | diff | command_output | browser_evidence | data_contract | note
+    path_or_ref: ""
+    summary: ""
+    confidence: confirmed | candidate | hypothesis | rejected
+
+evidence_files: []
+
+data_items:
+  - id: ""
+    type: ""
+    source: ""
+    confidence: confirmed | candidate | hypothesis | rejected
+    applies_to: ""
+    value_summary: ""
+    evidence_refs: []
+    risks: []
+
+known_gaps: []
+proves: []
+does_not_prove:
+  - "This packet is input evidence, not final product acceptance."
+  - "The branch actor cannot accept its own data contract."
+not_claimed:
+  - seller_ready
+  - listing_ready
+  - platform_pass
+  - publish_ready
+  - generated_image_quality
+  - sample_or_source_quality
+  - profit_or_actionability
+  - external_write_authorization
+
+next_required_decision: ""
+handoff_rules:
+  - "Consumer project must treat this packet as input evidence, not final product acceptance."
+  - "Facts, candidates, style references, layout references, and donor references must remain typed."
+  - "External platform writes and credential use remain gated."

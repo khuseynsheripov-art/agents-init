@@ -9,12 +9,22 @@ workflow_closeout_receipt:
     open_threads: ".workflow/open_threads.yaml"
     verification: ".workflow/verification.yaml"
     authority_index: ".workflow/authority_index.yaml"
+    thread_registry: ".workflow/thread_registry.yaml"
+    branch_plan: ""
+    worktree_registry: ".workflow/thread_registry.yaml#worktrees"
+    completion_notice: ""
+    parked_packet: ""
   active_head_after:
     current: ".workflow/current.yaml"
     task: ".workflow/task.yaml"
     open_threads: ".workflow/open_threads.yaml"
     verification: ".workflow/verification.yaml"
     authority_index: ".workflow/authority_index.yaml"
+    thread_registry: ".workflow/thread_registry.yaml"
+    branch_plan: ""
+    worktree_registry: ".workflow/thread_registry.yaml#worktrees"
+    completion_notice: ""
+    parked_packet: ""
   head_mutations:
     current:
       status: unchanged
@@ -35,6 +45,18 @@ workflow_closeout_receipt:
       status: unchanged
       note: ""
     thread_registry:
+      status: unchanged
+      note: ""
+    branch_plan:
+      status: unchanged
+      note: ""
+    worktree_registry:
+      status: unchanged
+      note: ""
+    completion_notice:
+      status: unchanged
+      note: ""
+    parked_packet:
       status: unchanged
       note: ""
     session_recovery:

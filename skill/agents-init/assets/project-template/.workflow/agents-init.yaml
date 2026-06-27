@@ -99,6 +99,17 @@ interaction_menu:
       - "$agents-init register-main"
       - "register main thread"
     action: "Write the active Codex thread id to thread_registry when available."
+  main_orchestration:
+    trigger:
+      - "$agents-init main"
+      - "enter main orchestration"
+      - "multi-worktree orchestration"
+      - "branch_plan"
+      - "completion_notice"
+      - "data_packet"
+      - "chairman_brief"
+      - "parked_waiting_next_packet"
+    action: "Recover state, analyze goal/object/module boundaries, then propose or resume task_packet -> branch_plan -> completion_notice -> data_packet -> chairman_brief -> parked_waiting_next_packet lifecycle. Do not create worktrees blindly."
   dispatch_worker:
     trigger:
       - "$agents-init dispatch-worker"
@@ -130,6 +141,13 @@ interaction_menu:
       - "save before compression"
       - "handoff to a new session"
     action: "Update current/task/open_threads/verification and recovery brief."
+  evidence_exhaustion:
+    trigger:
+      - "evidence exhaustion"
+      - "evidence not fully read"
+      - "rg found nothing"
+      - "context compression"
+    action: "Use context hygiene guardrail with methods, negative_searches, not_read_open_gap, and proof boundaries. rg alone is not evidence exhaustion."
 
 roles:
   main_agent:

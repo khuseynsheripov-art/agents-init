@@ -5,6 +5,18 @@ lifecycle: one_shot | continuous
 status: done | blocked | needs_review | no_output | interrupted | restarted
 receipt_status: submitted | accepted | rejected
 
+orchestration_refs:
+  task_packet_ref: ""
+  branch_plan_ref: ""
+  completion_notice_ref: ""
+  data_packet_refs: []
+  parked_packet_ref: ""
+  worktree_id: ""
+  worktree: ""
+  branch: ""
+  base_sha: ""
+  head_sha: ""
+
 scope: ""
 files_read: []
 files_changed: []

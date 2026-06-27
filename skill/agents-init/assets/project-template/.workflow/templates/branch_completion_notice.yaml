@@ -1,0 +1,26 @@
+completion_notice:
+  id: ""
+  created_at: ""
+  task_id: ""
+  branch_actor_id: ""
+  worktree: ""
+  branch_plan_path: ""
+  status: completed | partial | blocked | needs_orchestrator_decision | superseded
+  completion_notice_is_not_acceptance: true
+  receipt_path: ""
+  data_packet_paths: []
+  main_artifacts: []
+  proves_summary: []
+  does_not_prove_summary: []
+  open_questions: []
+  blockers: []
+  requested_orchestrator_decision: ""
+  ready_for_orchestrator_ingest: true
+  normal_next_status: parked_waiting_next_packet
+  branch_state_after_notice: parked_waiting_next_packet | revision_requested | blocked | archived
+  not_a_product_claim:
+    - "Does not prove UI acceptance."
+    - "Does not prove generated image quality."
+    - "Does not prove sample/source acceptance."
+    - "Does not prove seller-ready, listing-ready, platform-pass, publish, profit, or actionability."
+    - "Does not prove external writes are authorized."

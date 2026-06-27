@@ -50,6 +50,8 @@ When the user is asking "is this the previous analysis, a new page, or the old p
 | Chaotic second-development task | `blueprint -> salvage -> insertion plan -> visible slice` |
 | Clear lifecycle task | Maestro/Ralph after gates are known |
 | Multi-session work | main thread dispatches bounded workers and ingests receipts |
+| Dynamic main / multi-worktree orchestration | `recover -> main-orchestration-intake -> propose topology/task_packet -> human gate -> dispatch branch` |
+| Evidence-heavy compression or absence claim | `context-hygiene -> evidence_exhaustion_check -> partial_continue or return to main` |
 
 If the user says they are confused, dissatisfied, unsure, wants a long task, or references prior work, do not implement first. Recover or create project state, retrieve relevant prior-task anchors when applicable, then make a main-agent orchestration decision. Do not use keyword matching as the final decision.
 
@@ -68,6 +70,8 @@ Read only the relevant reference:
 | `.workflow` schema and recovery fields | `references/workflow-schema.md` |
 | Maestro/Ralph/delegate/Windows limits | `references/maestro-routing.md` |
 | Codex App multi-session worker protocol | `references/codex-thread-protocol.md` |
+| Dynamic main, worktree, branch packet orchestration | `references/main-worktree-orchestration.md` |
+| Context hygiene and evidence exhaustion | `references/context-hygiene-and-evidence-exhaustion.md` |
 | Old project/worktree salvage | `references/adoption-salvage.md` |
 | Role and model/tool routing | `references/multi-model-role-policy.md` |
 | Multi-model or `cc2`/Claude shared-context review | `references/multi-model-shared-context.md` |
@@ -104,12 +108,14 @@ Agents Init can help with:
 3. Clarify fuzzy intent: restate intent, find uncertainty, ask 1-3 upstream questions.
 4. Plan/blueprint: PM + FDE plan, old-project salvage, insertion plan.
 5. Workers: dispatch bounded Codex workers and ingest receipts.
-6. Maestro/Ralph: route lifecycle/delegate work after gates are clear.
-7. Claude/multi-model: build a compact packet, run a receipt-backed second view.
-8. UI/sample/image gate: require visible evidence and user acceptance.
-9. Self-update: pull latest agents-init and optionally upgrade this project.
-10. Closeout workflow: record route/gate/direction/handoff/promotion/archive transactions.
-11. Save handoff: write recoverable state before compression or handoff.
+6. Main/worktree orchestration: optionally enter `agents-init main`, propose branch topology, issue task_packet, ingest branch_plan/completion_notice/data_packet, brief the user, then park or dispatch next.
+7. Maestro/Ralph: route lifecycle/delegate work after gates are clear.
+8. Claude/multi-model: build a compact packet, run a receipt-backed second view.
+9. UI/sample/image gate: require visible evidence and user acceptance.
+10. Evidence hygiene: for high-risk compression or absence claims, record methods, negative_searches, not_read_open_gap, and proof boundaries.
+11. Self-update: pull latest agents-init and optionally upgrade this project.
+12. Closeout workflow: record route/gate/direction/handoff/promotion/archive transactions.
+13. Save handoff: write recoverable state before compression or handoff.
 ```
 
 If the user already gave a concrete intent, skip the menu and route the request.
@@ -132,6 +138,7 @@ These are reference actions for the main agent. Do not present them as the prima
 | `$agents-init multi-perspective-review` | Review a fuzzy/long/UI/sample/old-project task through PM/FDE/UX/Workflow/Maestro/Risk views before execution. |
 | `$agents-init blueprint` | Map requirement -> modules -> risks -> acceptance before implementation. |
 | `$agents-init plan` | Produce a PM + FDE plan with gates and verification. |
+| `$agents-init main` | Optional shortcut to enter or resume dynamic main/worktree orchestration; natural-language `agents-init` remains the default entry. |
 | `$agents-init register-main` | Register or update the active main Codex thread id. |
 | `$agents-init dispatch-worker` | Create/message one bounded worker with a receipt contract. |
 | `$agents-init ingest-receipt` | Accept/reject worker output and update `.workflow`. |
@@ -152,6 +159,9 @@ Natural language should route to the same actions. Examples:
 - "Analyze product/source/sample options" -> `sample_decision` plus research task
 - "The second-development branch failed; salvage the old project" -> `blueprint -> salvage -> insertion plan`
 - "Open sub-sessions to analyze separately" -> `dispatch-worker`
+- "Create or resume main/worktree orchestration" -> `recover -> main-orchestration-intake`; do not create worktrees before recovery, goal clarification, and object/module boundary analysis
+- "This branch returned branch_plan/completion_notice/data_packet" -> `main ingest -> chairman_brief -> parked_waiting_next_packet or next task_packet`
+- "Evidence was compressed / not fully read / rg found nothing" -> `evidence_exhaustion_check`; rg alone is not evidence exhaustion
 - "This report changes the plan / close the old path" -> `closeout-workflow`
 - "Save state before compression" -> `save-state`
 - "This is a small clear task; do it directly" -> `direct`
@@ -228,6 +238,34 @@ Maestro skills are not Claude delegate. Treat `spec/knowhow/search/KG/wiki/domai
 Project-level Maestro Codex skills are a separate surface from Maestro CLI knowledge commands. When the user asks for Maestro Grill, Maestro Next, Ralph, Quick, Learn, Guard, or another project-installed Maestro skill, do not stop at `$agents-init` or registry discovery. Verify availability with `maestro ralph skills --platform codex --json`, read the selected project skill's SKILL.md, and then either apply that skill's instructions in the current main-agent context or record why the skill is blocked by a human gate, missing evidence, or unsupported transport. Registry discovery alone is not execution, and `maestro <skill-name>` returning generic CLI help is not proof that the Codex skill ran.
 
 Minimum accepted Maestro skill smoke: recover `.workflow`; retrieve Maestro search/spec/knowhow/KG anchors when relevant; verify the project skill is listed; read the selected project skill's SKILL.md; perform one bounded in-context skill action or explicitly block it; write a receipt with raw commands/files read plus `proves` and `does_not_prove`. Started, listed, or recommended work is not evidence until the main agent ingests the receipt or artifact.
+
+## Dynamic Main / Multi-Worktree Orchestration
+
+Use this only when recovered state and the user's goal show that one main agent should coordinate multiple worktrees, branch actors, or durable Codex App sessions. The default entry remains `agents-init`; `agents-init main` is an optional shortcut for explicitly entering or resuming this mode.
+
+This mode is state-driven, not keyword-driven. Before creating or resuming worktrees, the main agent must recover `.workflow`, clarify the goal, identify object/module boundaries, disclose consequences, and decide whether the split is actually useful. Do not create worktrees before recovery, goal clarification, and object/module boundary analysis.
+
+The generic packet lifecycle is:
+
+```text
+task_packet -> branch_plan -> completion_notice -> data_packet -> chairman_brief -> parked_waiting_next_packet
+```
+
+`completion_notice` is not acceptance. `data_packet` is input evidence, not final judgment. `chairman_brief` is the main-agent synthesis for the user after receipt/data-packet ingest. `parked_waiting_next_packet` is a normal waiting state after a bounded branch task; it is not failure, merge readiness, or product completion.
+
+Do not hardcode Ozon B/S/C lanes, ERP paths, or business gates as generic agents-init rules. If a project already has local orchestrator rules, adapt to them and keep agents-init as the recoverable control-plane helper.
+
+Read `references/main-worktree-orchestration.md` for the full rules and templates.
+
+## Context Hygiene And Evidence Exhaustion
+
+Use this as a low-frequency high-risk guardrail for branch compression, evidence-heavy tasks, absence claims, system errors, or user corrections that say evidence was not fully read. It is not the default path for small tasks.
+
+Raw evidence belongs in files, receipts, artifacts, and indexes. Model context should carry bounded digests and the current decision head. `rg` alone is not evidence exhaustion; it can only prove that specific patterns did not match a specific searched scope.
+
+When this guardrail is triggered, use `evidence_exhaustion_check.yaml` and record `methods`, `positive_evidence`, `negative_searches`, `not_read_open_gap`, excluded noise, confidence, and `does_not_prove`. Use `evidence_digest.yaml` before compression or handoff when raw evidence would overload the next session.
+
+Read `references/context-hygiene-and-evidence-exhaustion.md` for the full guardrail.
 
 For Codex App multi-session:
 

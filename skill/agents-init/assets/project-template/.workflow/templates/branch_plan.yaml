@@ -1,0 +1,48 @@
+branch_plan:
+  id: ""
+  created_at: ""
+  status: draft | submitted | accepted_by_main | rejected_by_main | superseded
+  task_id: ""
+  task_packet_path: ""
+  branch_actor_id: ""
+  worktree: ""
+  branch_name: ""
+  module_boundary:
+    owns:
+      - ""
+    does_not_own:
+      - ""
+  scope_confirmation:
+    in_scope: []
+    out_of_scope_acknowledged: []
+    assumptions: []
+  planned_reads: []
+  planned_writes: []
+  conflict_set:
+    files_or_dirs: []
+    active_workers_or_branches: []
+    mitigation: ""
+  verification_surface:
+    commands: []
+    browser_or_visual: []
+    receipts_or_artifacts: []
+    human_gates_still_needed: []
+  expected_artifacts: []
+  evidence_policy:
+    evidence_exhaustion_check_required: false
+    evidence_exhaustion_template: .workflow/templates/evidence_exhaustion_check.yaml
+    evidence_digest_template: .workflow/templates/evidence_digest.yaml
+  stop_conditions:
+    - direction_change
+    - cross_project_contract_change
+    - external_write_or_credential_needed
+    - secret_cookie_token_or_complete_header_encountered
+    - acceptance_gate_needed
+  completion_notice_target: ""
+  receipt_path: ""
+  data_packet_paths: []
+  proves:
+    - "The branch actor understood the packet and proposed a bounded execution plan."
+  does_not_prove:
+    - "This plan does not prove task completion."
+    - "This plan does not prove product readiness or acceptance."

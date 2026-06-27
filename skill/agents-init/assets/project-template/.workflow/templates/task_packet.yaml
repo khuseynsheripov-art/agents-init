@@ -1,0 +1,51 @@
+task_packet:
+  id: ""
+  created_at: ""
+  status: draft | issued | superseded | cancelled
+  orchestrator_authorization:
+    issued_by: main_agent
+    main_thread_id: ""
+    project: ""
+    gate: ""
+    authorization_boundary:
+      - "This packet authorizes only the bounded goal slice below."
+      - "It does not authorize product direction changes, acceptance gates, or external writes."
+  goal_slice:
+    task_id: ""
+    objective: ""
+    module_or_object_boundary: ""
+    worktree: ""
+    branch_or_thread_id: ""
+  scope:
+    in_scope: []
+    out_of_scope: []
+    allowed_files_or_dirs: []
+    forbidden_files_or_dirs: []
+    read_first: []
+    may_edit: []
+    must_not_edit: []
+  expected_return_packet:
+    branch_plan_required: true
+    branch_plan_template: .workflow/templates/branch_plan.yaml
+    completion_notice_required: true
+    completion_notice_template: .workflow/templates/branch_completion_notice.yaml
+    receipt_required: true
+    data_packet_required: false
+    data_packet_template: .workflow/templates/cross_project_data_packet.yaml
+  stop_and_report_if:
+    - "The task packet appears wrong or insufficient for the user goal."
+    - "The work changes cross-project data contracts, object models, task order, or acceptance criteria."
+    - "The work requires external writes, credentials, cookies, tokens, complete headers, publish/order/payment actions, or unauthorized bypass."
+    - "The branch needs to decide product direction, UI/sample/image acceptance, or business readiness."
+  must_not_decide:
+    - product_direction
+    - object_model_or_data_contract_outside_scope
+    - acceptance_standard
+    - task_order
+    - external_write_authorization
+    - final_user_acceptance
+  proves:
+    - "A main agent issued one bounded branch authorization."
+  does_not_prove:
+    - "Worktree creation or packet issue does not prove task completion."
+    - "This packet does not prove product readiness, UI acceptance, sample acceptance, or external-write approval."

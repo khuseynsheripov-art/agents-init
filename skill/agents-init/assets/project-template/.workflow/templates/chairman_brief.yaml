@@ -1,0 +1,64 @@
+chairman_brief:
+  id: ""
+  created_at: ""
+  status: draft | sent | superseded
+  task_or_gate: ""
+  prepared_by: main_agent
+  audience: user_as_chairman
+
+  one_sentence_status: ""
+
+  packet_or_receipt_inputs:
+    - task_id: ""
+      receipt_path: ""
+      completion_notice_path: ""
+      data_packet_paths: []
+      ingest_decision: accepted | rejected | needs_revision | inconclusive
+
+  main_agent_synthesis:
+    accepted_findings:
+      - finding: ""
+        evidence: []
+    rejected_findings:
+      - finding: ""
+        reason: ""
+    unresolved_or_blocked:
+      - ""
+
+  what_this_proves: []
+  what_this_does_not_prove: []
+
+  recommended_next_action:
+    action: ""
+    reason: ""
+    rejected_or_deferred_paths: []
+    risk_if_we_skip_confirmation: ""
+
+  upstream_questions:
+    max_count: 3
+    questions:
+      - id: ""
+        question: ""
+        consequence_if_yes: ""
+        consequence_if_no: ""
+
+  branch_state_after_brief:
+    - project: ""
+      branch_actor_id: ""
+      worktree: ""
+      last_task_id: ""
+      status: parked_waiting_next_packet | archived | revision_requested | running | blocked
+      next_packet_candidate: ""
+
+  next_task_packet_candidates:
+    - task_id: ""
+      owner_project: ""
+      purpose: ""
+      gated: true
+      branch_plan_required: true
+      completion_notice_required: true
+
+  still_forbidden_or_gated:
+    - "External platform writes require explicit user approval."
+    - "Credentials, cookies, tokens, and complete headers remain gated."
+    - "UI, image quality, sample, seller-ready/listing-ready/platform-pass/publish/profit/actionability require explicit evidence and acceptance."

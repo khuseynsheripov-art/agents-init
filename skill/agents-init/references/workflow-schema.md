@@ -74,11 +74,17 @@ Track:
 - active main thread;
 - historical/superseded main threads;
 - worker threads;
+- worktrees and branch actors when dynamic main orchestration is active;
+- task_packet, branch_plan, completion_notice, data_packet, parked_waiting_next_packet, and receipt paths;
 - Maestro delegate ids;
 - native subagent ids if useful;
 - receipt status.
 
 When a new main thread takes over, it must recover state first. If a real thread id is known, register it and mark the old main historical or superseded.
+
+For dynamic main/worktree orchestration, `parked_waiting_next_packet` is a normal waiting state after one bounded branch task. It is not task acceptance, merge readiness, product completion, or failure. `completion_notice` is not acceptance; the main agent must inspect receipts/data packets, update workflow heads, and produce a user-facing brief when a user gate or next task decision is needed.
+
+Worktree records should include path, branch, base/head sha or an explicit unknown reason, merge target, dirty state, active main, owning task, branch plan, completion notice, parked packet, gate, human gate status, owned paths, and conflict set.
 
 ## `memory_points.yaml`
 
@@ -150,6 +156,24 @@ The closeout receipt must name:
 - `does_not_prove`.
 
 The receipt records lifecycle closure. It does not prove product acceptance, UI/sample/generated-image acceptance, or business readiness.
+
+For branch/worktree lifecycle closeout, include branch_plan, worktree_registry, completion_notice, and parked_packet head mutations. A receipt accepted by main does not imply the branch is merged or archived unless those heads are explicitly updated.
+
+## Evidence Exhaustion Check
+
+Use `.workflow/templates/evidence_exhaustion_check.yaml` only when a high-risk evidence-heavy task, context compression, absence claim, or system-error recovery needs it.
+
+Minimum fields:
+
+- methods;
+- positive evidence;
+- negative_searches;
+- not_read_open_gap;
+- excluded noise;
+- confidence;
+- proves and does_not_prove.
+
+`rg` alone is not evidence exhaustion. It only proves that named patterns did not match a named scope.
 
 ## Document Triage Receipt
 

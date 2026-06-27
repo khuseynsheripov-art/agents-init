@@ -92,6 +92,8 @@ $patterns = [ordered]@{
   no_claude = @('no claude', 'codex only', '\u4e0d\u8981\s*claude')
   continuous_model = @('continuous reviewer', 'resume', 'keep reviewing', '\u6301\u7eed.*reviewer', '\u6301\u7eed.*claude')
   knowledge = @('maintain-knowledge', 'knowledge lifecycle', 'document lifecycle', 'document_lifecycle_receipt', 'documents.*piling', 'docs.*piling', 'unfinished docs', 'changed decisions', 'do not append.*summary', 'stop.*summary', 'archive.*receipts', 'supersede.*docs', 'promote.*knowhow', '\u6587\u6863', '\u6587\u4ef6.*\u5806', '\u6ca1\u5b8c\u6210', '\u672a\u5b8c\u6210', '\u51b3\u5b9a.*\u53d8', '\u51b3\u7b56.*\u53d8', '\u522b.*\u603b\u7ed3', '\u4e0d\u8981.*\u603b\u7ed3', '\u8ffd\u52a0\u603b\u7ed3', '\u5f52\u6863', '\u6536\u53e3', '\u788e\u7247', '\u6563\u843d', '\u672a\u89e3\u51b3', '\u8fc7\u671f', '\u53d6\u4ee3')
+  main_orchestration = @('agents-init\s+main', 'agents init\s+main', 'main orchestration', 'multi-worktree', 'multi worktree', 'multiple worktrees', 'main per worktree', 'worktree orchestration', 'branch_plan', 'branch plan', 'completion_notice', 'completion notice', 'data_packet', 'data packet', 'chairman_brief', 'chairman brief', 'parked_waiting_next_packet', 'parked waiting next packet', 'task_packet', 'task packet', 'branch actor', 'branch actors', 'dynamic main', '\u603b\u7f16\u6392', '\u591a\u652f\u7ebf', '\u521b\u5efa\s*worktree', '\u652f\u7ebf.*\u4efb\u52a1\u5305', '\u8463\u4e8b\u957f.*\u7b80\u62a5')
+  evidence_exhaustion = @('evidence_exhaustion', 'evidence exhaustion', 'evidence digest', 'negative_searches', 'negative searches', 'not_read_open_gap', 'not read open gap', 'rg alone', 'search exhaustion', 'context window', 'context compression', 'systemerror', 'crashpad', 'evidence not fully read', '\u8bc1\u636e.*\u6ca1\u8bfb\u5b8c', '\u8bc1\u636e.*\u7a77\u5c3d', '\u538b\u7f29.*\u8bc1\u636e', '\u627e\u4e0d\u5230.*\u4e0d\u7b49\u4e8e')
   direct = @('small clear task', 'direct', 'no maestro', '\u5c0f\u76ee\u6807', '\u5f88\u6e05\u695a', '\u76f4\u63a5', '\u4e0d\u9700\u8981\s*maestro')
   fuzzy = @('fuzzy', 'unclear', 'confused', 'clarify', 'grill', 'brainstorm', '\u6a21\u7cca', '\u8ff7\u832b', '\u6df7\u4e71', '\u4e0d\u61c2', '\u4e0d\u4f1a', '\u8dd1\u504f', '\u6f84\u6e05', '\u9700\u6c42')
   long = @('long task', 'many tasks', 'context', 'plan first', '\u957f\u4efb\u52a1', '\u591a\u4efb\u52a1', '\u4e0a\u4e0b\u6587', '\u62c6\u4efb\u52a1')
@@ -141,6 +143,30 @@ if (Test-AnyPattern $lower $patterns['menu']) {
       "powershell -NoProfile -ExecutionPolicy Bypass -File `"$skillRoot\scripts\invoke-maestro-skill.ps1`" -ProjectPath `"$project`" -Skill spec -Action search -Query <stable-rule-query> -Json"
     ) `
     -MustNot @('Do not append another summary before classifying artifacts.', 'Do not treat route-intent as semantic proof.', 'Do not delete or archive without preserving restore or trace references.', 'Do not call the workflow healthy while open_threads warnings remain.')
+} elseif ($hasWorkflow -and (Test-AnyPattern $lower $patterns['main_orchestration'])) {
+  $route = New-Route `
+    -Name 'main-orchestration-intake' `
+    -Action 'Recover project state, analyze goal/object/module boundaries, then propose or resume dynamic main/multi-worktree orchestration with task_packet, branch_plan, completion_notice, data_packet, chairman_brief, and parked_waiting_next_packet lifecycle.' `
+    -Gate 'main_orchestration_intake' `
+    -Confidence 'high' `
+    -Reason 'Prompt mentions dynamic main, multi-worktree orchestration, branch packets, completion notices, data packets, chairman brief, or parked branch state.' `
+    -ReadFirst ($readCore + @('references/main-worktree-orchestration.md', 'references/codex-thread-protocol.md')) `
+    -Templates @('.workflow/templates/orchestration_decision.yaml', '.workflow/templates/task_packet.yaml', '.workflow/templates/branch_plan.yaml', '.workflow/templates/branch_completion_notice.yaml', '.workflow/templates/cross_project_data_packet.yaml', '.workflow/templates/chairman_brief.yaml', '.workflow/templates/parked_waiting_next_packet.yaml') `
+    -Commands @(
+      "powershell -NoProfile -ExecutionPolicy Bypass -File `"$skillRoot\scripts\recover-agents.ps1`" -ProjectPath `"$project`"",
+      "Write or update task_packet / branch_plan / completion_notice / data_packet / chairman_brief artifacts before changing branch state."
+    ) `
+    -MustNot @('Do not create worktrees before recovery, goal clarification, and object/module boundary analysis.', 'Do not make agents-init main mandatory; it is an optional shortcut.', 'Do not hardcode Ozon B/S/C lanes as generic agents-init rules.', 'Do not treat completion_notice, data_packet, valid=true, route-intent, or started workers as final proof.')
+} elseif ($hasWorkflow -and (Test-AnyPattern $lower $patterns['evidence_exhaustion'])) {
+  $route = New-Route `
+    -Name 'evidence-exhaustion-guardrail' `
+    -Action 'Run the Context Hygiene And Evidence Exhaustion guardrail only for the named high-risk scope: record methods, positive evidence, negative_searches, not_read_open_gap, excluded noise, and proof boundaries before relying on absence claims.' `
+    -Gate 'evidence_exhaustion_guardrail' `
+    -Confidence 'high' `
+    -Reason 'Prompt or recovered state signals context compression, evidence-heavy work, absence claims, system errors, or incomplete evidence reading.' `
+    -ReadFirst ($readCore + @('references/context-hygiene-and-evidence-exhaustion.md')) `
+    -Templates @('.workflow/templates/evidence_exhaustion_check.yaml', '.workflow/templates/evidence_digest.yaml') `
+    -MustNot @('rg alone is not evidence exhaustion.', 'Do not treat valid=true, started workers, listed tools, or route-intent recommendations as live proof.', 'Do not put raw evidence piles into model context when an indexed artifact or digest is safer.')
 } elseif (Test-AnyPattern $lower $patterns['maestro_skill']) {
   $route = New-Route `
     -Name 'invoke-maestro-skill' `

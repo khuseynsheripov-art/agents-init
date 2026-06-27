@@ -195,6 +195,14 @@ $requiredFiles = @(
   '.workflow/templates/plan_pm_fde.yaml',
   '.workflow/templates/session_recovery_brief.md',
   '.workflow/templates/workflow_closeout_receipt.yaml',
+  '.workflow/templates/task_packet.yaml',
+  '.workflow/templates/branch_plan.yaml',
+  '.workflow/templates/branch_completion_notice.yaml',
+  '.workflow/templates/cross_project_data_packet.yaml',
+  '.workflow/templates/chairman_brief.yaml',
+  '.workflow/templates/parked_waiting_next_packet.yaml',
+  '.workflow/templates/evidence_exhaustion_check.yaml',
+  '.workflow/templates/evidence_digest.yaml',
   'docs/dev-os/command-intent-map.md',
   'docs/dev-os/multi-codex-session-mode.md'
 )
@@ -231,6 +239,14 @@ $multiModelPacketPath = Join-Path $project '.workflow/templates/multi_model_cont
 $modelReviewReceiptPath = Join-Path $project '.workflow/templates/model_review_receipt.yaml'
 $designDebateReceiptPath = Join-Path $project '.workflow/templates/design_debate_receipt.yaml'
 $workflowCloseoutReceiptPath = Join-Path $project '.workflow/templates/workflow_closeout_receipt.yaml'
+$taskPacketPath = Join-Path $project '.workflow/templates/task_packet.yaml'
+$branchPlanPath = Join-Path $project '.workflow/templates/branch_plan.yaml'
+$branchCompletionNoticePath = Join-Path $project '.workflow/templates/branch_completion_notice.yaml'
+$crossProjectDataPacketPath = Join-Path $project '.workflow/templates/cross_project_data_packet.yaml'
+$chairmanBriefPath = Join-Path $project '.workflow/templates/chairman_brief.yaml'
+$parkedWaitingNextPacketPath = Join-Path $project '.workflow/templates/parked_waiting_next_packet.yaml'
+$evidenceExhaustionCheckPath = Join-Path $project '.workflow/templates/evidence_exhaustion_check.yaml'
+$evidenceDigestPath = Join-Path $project '.workflow/templates/evidence_digest.yaml'
 $dispatchDir = Join-Path $project '.workflow/dispatch'
 
 $current = Read-TextOrEmpty $currentPath
@@ -248,6 +264,14 @@ $multiModelPacket = Read-TextOrEmpty $multiModelPacketPath
 $modelReviewReceipt = Read-TextOrEmpty $modelReviewReceiptPath
 $designDebateReceipt = Read-TextOrEmpty $designDebateReceiptPath
 $workflowCloseoutReceipt = Read-TextOrEmpty $workflowCloseoutReceiptPath
+$taskPacket = Read-TextOrEmpty $taskPacketPath
+$branchPlan = Read-TextOrEmpty $branchPlanPath
+$branchCompletionNotice = Read-TextOrEmpty $branchCompletionNoticePath
+$crossProjectDataPacket = Read-TextOrEmpty $crossProjectDataPacketPath
+$chairmanBrief = Read-TextOrEmpty $chairmanBriefPath
+$parkedWaitingNextPacket = Read-TextOrEmpty $parkedWaitingNextPacketPath
+$evidenceExhaustionCheck = Read-TextOrEmpty $evidenceExhaustionCheckPath
+$evidenceDigest = Read-TextOrEmpty $evidenceDigestPath
 
 if ($current -and $current -notmatch '(?m)^\s*current_gate:\s*\S+') {
   Add-Issue -Level 'error' -Message 'current.yaml must include current_gate.' -File '.workflow/current.yaml'
@@ -349,6 +373,63 @@ if ($workflowCloseoutReceipt) {
       Add-Issue -Level 'error' -Message "workflow_closeout_receipt.yaml must include $field." -File '.workflow/templates/workflow_closeout_receipt.yaml'
     }
   }
+  foreach ($field in @('branch_plan:', 'worktree_registry:', 'completion_notice:', 'parked_packet:')) {
+    if ($workflowCloseoutReceipt -notmatch [regex]::Escape($field)) {
+      Add-Issue -Level 'warning' -Message "workflow_closeout_receipt.yaml should include branch/worktree lifecycle head mutation field $field." -File '.workflow/templates/workflow_closeout_receipt.yaml'
+    }
+  }
+}
+if ($taskPacket) {
+  foreach ($field in @('orchestrator_authorization:', 'goal_slice:', 'must_not_decide:', 'expected_return_packet:')) {
+    if ($taskPacket -notmatch [regex]::Escape($field)) {
+      Add-Issue -Level 'warning' -Message "task_packet.yaml should include $field for dynamic main orchestration." -File '.workflow/templates/task_packet.yaml'
+    }
+  }
+}
+if ($branchPlan) {
+  foreach ($field in @('worktree:', 'module_boundary:', 'conflict_set:', 'verification_surface:')) {
+    if ($branchPlan -notmatch [regex]::Escape($field)) {
+      Add-Issue -Level 'warning' -Message "branch_plan.yaml should include $field for recoverable branch execution." -File '.workflow/templates/branch_plan.yaml'
+    }
+  }
+}
+if ($branchCompletionNotice) {
+  foreach ($field in @('completion_notice_is_not_acceptance', 'normal_next_status: parked_waiting_next_packet', 'does_not_prove_summary:')) {
+    if ($branchCompletionNotice -notmatch [regex]::Escape($field)) {
+      Add-Issue -Level 'warning' -Message "branch_completion_notice.yaml must show completion_notice is not acceptance and usually parks the branch." -File '.workflow/templates/branch_completion_notice.yaml'
+    }
+  }
+}
+if ($crossProjectDataPacket) {
+  foreach ($field in @('payload_index:', 'proves:', 'does_not_prove:', 'orchestrator_decision_required: true')) {
+    if ($crossProjectDataPacket -notmatch [regex]::Escape($field)) {
+      Add-Issue -Level 'warning' -Message "cross_project_data_packet.yaml should include $field so data packets remain input evidence, not acceptance." -File '.workflow/templates/cross_project_data_packet.yaml'
+    }
+  }
+}
+if ($chairmanBrief) {
+  foreach ($field in @('main_agent_synthesis:', 'accepted_findings:', 'rejected_findings:', 'upstream_questions:')) {
+    if ($chairmanBrief -notmatch [regex]::Escape($field)) {
+      Add-Issue -Level 'warning' -Message "chairman_brief.yaml should include $field for orchestrator synthesis before user-facing decisions." -File '.workflow/templates/chairman_brief.yaml'
+    }
+  }
+}
+if ($parkedWaitingNextPacket) {
+  foreach ($field in @('parked_reason:', 'waiting_for:', 'unblock_condition:', 'must_not_claim:')) {
+    if ($parkedWaitingNextPacket -notmatch [regex]::Escape($field)) {
+      Add-Issue -Level 'warning' -Message "parked_waiting_next_packet.yaml should include $field so parked branch state is recoverable." -File '.workflow/templates/parked_waiting_next_packet.yaml'
+    }
+  }
+}
+if ($evidenceExhaustionCheck) {
+  foreach ($field in @('methods:', 'negative_searches:', 'not_read_open_gap:', 'rg_alone_is_not_exhaustion: true')) {
+    if ($evidenceExhaustionCheck -notmatch [regex]::Escape($field)) {
+      Add-Issue -Level 'warning' -Message "evidence_exhaustion_check.yaml should include $field; rg alone is not evidence exhaustion." -File '.workflow/templates/evidence_exhaustion_check.yaml'
+    }
+  }
+}
+if ($evidenceDigest -and $evidenceDigest -notmatch 'not_read_open_gap:') {
+  Add-Issue -Level 'warning' -Message 'evidence_digest.yaml should include not_read_open_gap so compression handoff does not hide unread evidence.' -File '.workflow/templates/evidence_digest.yaml'
 }
 if ($sessionRecovery) {
   if (Test-LikelyMojibake $sessionRecovery) {
@@ -461,6 +542,14 @@ if ($claimsExternalWrite -and -not $hasExplicitApproval) {
 
 if ($thread -and $thread -match '(?mi)^\s*receipt_status:\s*accepted\s*$' -and $thread -notmatch '(?mi)accepted_by_main_at:') {
   Add-Issue -Level 'warning' -Message 'A worker receipt is accepted but accepted_by_main_at is missing.' -File '.workflow/thread_registry.yaml'
+}
+if ($thread -and $thread -match '(?mi)^\s*status:\s*parked_waiting_next_packet\s*$') {
+  if ($thread -notmatch '(?mi)^\s*parked_packet_path:\s*(?!(""|''''|<|null\s*$))\S+') {
+    Add-Issue -Level 'warning' -Message 'Branch actor is parked_waiting_next_packet without parked_packet_path; parked branch recovery needs unblock condition and next owner/action.' -File '.workflow/thread_registry.yaml'
+  }
+  if ($thread -match '(?mi)^\s*status:\s*parked_waiting_next_packet\s*$' -and $thread -match '(?mi)^\s*(receipt_status:\s*accepted|completion_notice_path:\s*\S+)') {
+    Add-Issue -Level 'warning' -Message 'completion_notice is not acceptance; chairman_brief is required before claiming orchestrator synthesis or user-facing closeout.' -File '.workflow/thread_registry.yaml'
+  }
 }
 if ($thread) {
   foreach ($block in (Get-TopLevelListBlocks -Text $thread)) {

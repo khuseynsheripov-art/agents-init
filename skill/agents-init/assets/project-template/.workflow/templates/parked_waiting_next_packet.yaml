@@ -1,0 +1,37 @@
+parked_waiting_next_packet:
+  id: ""
+  created_at: ""
+  status: active | superseded | archived
+  branch_actor_id: ""
+  worktree: ""
+  task_id: ""
+  parked_reason: bounded_task_completed | waiting_main_ingest | waiting_user_gate | waiting_next_task_packet | blocked_pending_decision
+  waiting_for:
+    owner: main_agent | user | branch_actor | external_receipt
+    decision_or_packet: ""
+  unblock_condition:
+    - ""
+  last_known_git_state:
+    branch: ""
+    base_sha: ""
+    head_sha: ""
+    dirty_state: clean | dirty | unknown
+    unknown_reason: ""
+  packet_refs:
+    task_packet_path: ""
+    branch_plan_path: ""
+    completion_notice_path: ""
+    receipt_path: ""
+    data_packet_paths: []
+  handoff_to_main:
+    main_thread_id: ""
+    recovery_files:
+      - .workflow/current.yaml
+      - .workflow/thread_registry.yaml
+      - .workflow/verification.yaml
+    resume_command_or_files: []
+  must_not_claim:
+    - "Parked state is not task acceptance."
+    - "Parked state is not merge readiness."
+    - "Parked state is not product/UI/sample/business acceptance."
+  next_action: ""

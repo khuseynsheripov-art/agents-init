@@ -1,0 +1,46 @@
+evidence_exhaustion_check:
+  id: ""
+  created_at: ""
+  status: draft | partial_continue | exhaustive_for_scope | inconclusive | blocked
+  scope:
+    files_or_dirs: []
+    receipts_or_packets: []
+    threads_or_logs: []
+    excluded_noise: []
+  trigger:
+    - context_compression | system_error | absence_claim | huge_evidence_set | conflicting_receipt | branch_resume
+  methods:
+    searches: []
+    files_opened: []
+    parsers_or_structured_tools: []
+    commands: []
+    browser_or_visual_checks: []
+    receipts_inspected: []
+  positive_evidence:
+    - source: ""
+      proves:
+        - ""
+      does_not_prove:
+        - ""
+  negative_searches:
+    - query: ""
+      scope: ""
+      result: no_hits | irrelevant_hits | blocked | not_run
+      meaning: ""
+  not_read_open_gap:
+    - area: ""
+      reason: too_large | inaccessible | binary | generated | irrelevant_noise | deferred | unknown
+      risk_if_wrong: ""
+      next_if_needed: ""
+  confidence: exhaustive_for_scope | partial_continue | inconclusive | blocked
+  rg_alone_is_not_exhaustion: true
+  next_decision:
+    may_continue: false
+    must_return_to_main: false
+    reason: ""
+  proves:
+    - "Evidence search state is documented for the named scope."
+  does_not_prove:
+    - "Does not prove areas outside scope were read."
+    - "Does not prove live product acceptance."
+    - "Does not prove absence of evidence unless methods, negative_searches, and not_read_open_gap support that scope."

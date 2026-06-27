@@ -4,6 +4,14 @@ Use this mode when one main thread should coordinate bounded worker threads to s
 
 Default worker lifecycle is disposable: create or message one worker, get one receipt, ingest it, then archive/close the worker when tools allow. Durable workers are optional and only for repeated bounded work in one domain.
 
+For dynamic multi-worktree orchestration, use the branch packet lifecycle only after the main agent has recovered state and analyzed the goal/module boundaries:
+
+```text
+task_packet -> branch_plan -> completion_notice -> data_packet -> chairman_brief -> parked_waiting_next_packet
+```
+
+This is heavier than ordinary worker mode. Do not require it for small direct tasks or one-shot read-only workers.
+
 ## Main Thread
 
 The main thread owns product direction and `.workflow`.
@@ -17,6 +25,8 @@ Before creating or messaging a worker:
 5. If the main thread id is known, register it. If unknown, keep `current` and ask the user only when cross-thread read/send requires a real id.
 
 Use `make-worker-prompt.ps1` to generate the worker prompt when possible. Store dispatch prompts under `.workflow/dispatch/` for traceability when the task is not private.
+
+Before creating a worktree or branch actor, disclose the path/branch, owned files, conflict set, rollback/recovery point, human gates, and what creation does not prove.
 
 ## Worker Thread Prompt
 
@@ -59,3 +69,5 @@ powershell -NoProfile -ExecutionPolicy Bypass -File "<skill>\scripts\init-agents
 ```
 
 Applying a receipt appends verification evidence and updates the matching thread registry record. It does not replace artifact inspection or human-gated acceptance.
+
+For branch actors, a `completion_notice` is only a return signal. Main must inspect the receipt/data packet, decide accepted/rejected/revision, write a user-facing brief when needed, and park the branch as `parked_waiting_next_packet` until a new task packet is issued.
