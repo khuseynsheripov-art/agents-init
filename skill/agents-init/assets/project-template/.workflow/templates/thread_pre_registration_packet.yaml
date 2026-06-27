@@ -1,0 +1,49 @@
+packet_type: thread_pre_registration_packet
+packet_id: ""
+created_at: ""
+
+project:
+  path: ""
+  repo_root: ""
+  workflow_root: ".workflow"
+
+intended_session:
+  role: main_agent | branch_actor | durable_worker
+  lifecycle: one_shot | continuous
+  parent_main_id: ""
+  active_main_is_unknown_until_real_thread_id_returns: true
+  temporary_identity: pending_real_thread_id
+
+authorization:
+  task_id: ""
+  current_gate: ""
+  bounded_goal: ""
+  read_scope: []
+  write_scope: []
+  must_not_edit: []
+  forbidden_claims:
+    - "Do not self-register a guessed thread id."
+    - "Do not claim active-main identity before official_registration_packet."
+    - "Do not treat started thread, valid=true, route-intent, completion_notice, or data_packet as final proof."
+
+rule_layers:
+  generic_agents_init_rules:
+    - recovery
+    - receipts
+    - context_hygiene
+    - task_packets
+    - proof_boundaries
+    - human_gates
+  project_local_rules_ref:
+    - "AGENTS.md"
+    - ".workflow/current.yaml"
+    - ".workflow/task.yaml"
+  project_local_rules_are_not_global_skill_rules: true
+
+expected_next_packet:
+  type: official_registration_packet
+  after_thread_id_is_known: true
+
+does_not_prove:
+  - "This packet does not prove the session was created."
+  - "This packet does not register the active main by itself."

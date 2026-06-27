@@ -61,28 +61,58 @@ function Get-ScalarField {
 
 function Get-ListField {
   param([string]$Text, [string]$Field)
+
   $items = @()
-  $pattern = "(?ms)^\s*$([regex]::Escape($Field))\s*:\s*\r?\n(?<body>(?:\s+-\s+.*(?:\r?\n|$))*)"
-  $match = [regex]::Match($Text, $pattern)
-  if ($match.Success) {
-    foreach ($line in ($match.Groups['body'].Value -split "\r?\n")) {
-      if ($line -match '^\s*-\s*(.+?)\s*$') {
-        $item = $Matches[1].Trim()
-        if ($item -and $item -notin @('""', "''")) {
-          $items += $item.Trim('"').Trim("'")
-        }
+  $lines = @($Text -split "\r?\n")
+  $fieldIndex = -1
+  $fieldIndent = 0
+
+  for ($i = 0; $i -lt $lines.Count; $i++) {
+    $match = [regex]::Match($lines[$i], "^(?<indent>\s*)$([regex]::Escape($Field))\s*:\s*(?<inline>.*?)\s*$")
+    if ($match.Success) {
+      $fieldIndex = $i
+      $fieldIndent = $match.Groups['indent'].Value.Length
+      $inline = $match.Groups['inline'].Value.Trim()
+      if ($inline -and $inline -notin @('[]', '{}', 'null', '""', "''")) {
+        return @($inline.Trim('"').Trim("'"))
+      }
+      break
+    }
+  }
+
+  if ($fieldIndex -lt 0) {
+    return @()
+  }
+
+  for ($i = $fieldIndex + 1; $i -lt $lines.Count; $i++) {
+    $line = $lines[$i]
+    if ([string]::IsNullOrWhiteSpace($line)) {
+      continue
+    }
+
+    $indent = ([regex]::Match($line, '^\s*')).Value.Length
+    if ($indent -le $fieldIndent -and $line -match '^\s*[A-Za-z_][A-Za-z0-9_]*\s*:') {
+      break
+    }
+
+    if ($line -match '^\s*-\s*(.+?)\s*$') {
+      $item = $Matches[1].Trim()
+      if ($item -and $item -notin @('""', "''")) {
+        $items += $item.Trim('"').Trim("'")
       }
     }
   }
 
-  if ($items.Count -eq 0) {
-    $scalar = Get-ScalarField -Text $Text -Field $Field
-    if ($scalar -and $scalar -notin @('[]', '{}')) {
-      $items += $scalar
-    }
-  }
-
   return @($items)
+}
+
+function Write-Utf8NoBom {
+  param(
+    [Parameter(Mandatory = $true)][string]$Path,
+    [Parameter(Mandatory = $true)][string]$Text
+  )
+  $encoding = [System.Text.UTF8Encoding]::new($false)
+  [System.IO.File]::WriteAllText($Path, $Text, $encoding)
 }
 
 function Format-YamlString {
@@ -165,7 +195,7 @@ $(Format-YamlList -Items $NextSteps -Indent '  ')
   } else {
     $updated = $current.TrimEnd() + "`n`n" + $entry + "`n"
   }
-  Set-Content -LiteralPath $verificationPath -Value $updated -Encoding UTF8
+  Write-Utf8NoBom -Path $verificationPath -Text $updated
   return $entryId
 }
 
@@ -176,16 +206,16 @@ function Set-WorkerRecordField {
     if ($Lines[$i] -match $fieldPattern) {
       $indent = ([regex]::Match($Lines[$i], '^\s*')).Value
       $Lines[$i] = "$indent${Field}: $Value"
-      return ,$Lines
+      return $Lines
     }
   }
 
   $insertAt = $EndIndex + 1
   $newLine = "  ${Field}: $Value"
   if ($insertAt -ge $Lines.Count) {
-    return ,(@($Lines) + $newLine)
+    return @($Lines) + $newLine
   }
-  return ,(@($Lines[0..$EndIndex]) + $newLine + @($Lines[($EndIndex + 1)..($Lines.Count - 1)]))
+  return @($Lines[0..$EndIndex]) + $newLine + @($Lines[($EndIndex + 1)..($Lines.Count - 1)])
 }
 
 function Update-ThreadRegistry {
@@ -230,11 +260,11 @@ function Update-ThreadRegistry {
   $timestamp = '"' + (Get-Date).ToString('yyyy-MM-ddTHH:mm:ssK') + '"'
 
   $lines = @(Set-WorkerRecordField -Lines $lines -StartIndex $start -EndIndex $end -Field 'status' -Value $statusValue)
-  $lines = @(Set-WorkerRecordField -Lines $lines -StartIndex $start -EndIndex ($lines.Count - 1) -Field 'receipt_status' -Value $receiptStatusValue)
-  $lines = @(Set-WorkerRecordField -Lines $lines -StartIndex $start -EndIndex ($lines.Count - 1) -Field 'receipt_path' -Value (Format-YamlString $ReceiptRelativePath))
-  $lines = @(Set-WorkerRecordField -Lines $lines -StartIndex $start -EndIndex ($lines.Count - 1) -Field 'accepted_by_main_at' -Value $timestamp)
+  $lines = @(Set-WorkerRecordField -Lines $lines -StartIndex $start -EndIndex $end -Field 'receipt_status' -Value $receiptStatusValue)
+  $lines = @(Set-WorkerRecordField -Lines $lines -StartIndex $start -EndIndex $end -Field 'receipt_path' -Value (Format-YamlString $ReceiptRelativePath))
+  $lines = @(Set-WorkerRecordField -Lines $lines -StartIndex $start -EndIndex $end -Field 'accepted_by_main_at' -Value $timestamp)
 
-  Set-Content -LiteralPath $registryPath -Value $lines -Encoding UTF8
+  Write-Utf8NoBom -Path $registryPath -Text (($lines -join "`r`n") + "`r`n")
   return $true
 }
 

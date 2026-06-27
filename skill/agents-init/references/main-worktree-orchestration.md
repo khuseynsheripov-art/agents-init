@@ -8,6 +8,13 @@ The default entry remains agents-init and natural language. agents-init main is 
 
 Main orchestration is state-driven, not keyword-driven. The main agent must recover `.workflow`, understand the user's goal, identify object/module boundaries, and disclose consequences before proposing worktrees or branch sessions.
 
+Before dispatching branches, separate rule layers:
+
+- generic agents-init rules: recovery, main-agent ownership, human gates, task packets, receipts, proof boundaries, context hygiene, and branch parking;
+- project-local rules: domain object names, lane ids, business ids, module matrices, UI/product gates, platform write boundaries, and project-specific role names.
+
+The main agent may ask a project main/branch to adopt the generic rules, but it must keep project-local rules in the project AGENTS.md, `.workflow`, task packet, or receipt. Do not move project-specific rules into agents-init unless they generalize across projects.
+
 Do not create worktrees blindly. Worktree creation changes project topology and must be preceded by:
 
 - recovered goal and active gate;
@@ -18,6 +25,8 @@ Do not create worktrees blindly. Worktree creation changes project topology and 
 - what creation proves and does not prove.
 
 If a project already has its own orchestrator rules, AGENTS.md, or `.workflow`, agents-init adapts to that control plane. It must not replace the active main agent or override local project rules without an explicit handoff.
+
+When a new main/branch Codex App session is created and the real thread id is not known yet, send a `pre_registration_packet` first. After the thread id is returned, send or record an `official_registration_packet` before the session claims active-main or branch-actor identity.
 
 ## Role Model
 

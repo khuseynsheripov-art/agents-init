@@ -113,9 +113,21 @@ Assert-True ($routeIntent -match 'main_orchestration' -and $routeIntent -match '
 Assert-True ($routeIntent -match 'main-orchestration-intake' -and $routeIntent -match 'Do not create worktrees before recovery, goal clarification, and object/module boundary analysis') 'route-intent.ps1 must route main orchestration to an intake gate and forbid blind worktree creation.'
 Assert-True ($routeIntent -match 'evidence_exhaustion' -and $routeIntent -match 'negative_searches' -and $routeIntent -match 'not_read_open_gap' -and $routeIntent -match 'rg alone is not evidence exhaustion') 'route-intent.ps1 must detect context compression/evidence exhaustion as a low-frequency guardrail with explicit proof boundaries.'
 
+$routeIntentScript = Join-Path $skillRoot 'scripts\route-intent.ps1'
+$compressedRgJson = & powershell -NoProfile -ExecutionPolicy Bypass -File $routeIntentScript -ProjectPath $RepoRoot -Prompt 'worker was compressed and says rg found no evidence' -Json
+Assert-True ($LASTEXITCODE -eq 0) "route-intent compressed/rg pressure sample must run. Output: $compressedRgJson"
+$compressedRgRoute = $compressedRgJson | ConvertFrom-Json
+Assert-True ($compressedRgRoute.result.route -eq 'evidence-exhaustion-guardrail') 'route-intent must prioritize evidence-exhaustion when worker/compression signals collide with rg/no-evidence absence claims.'
+
+$mainRegistrationPolicyTerms = @('pre_registration_packet', 'official_registration_packet', 'active_main is unknown until the real thread id returns', 'project-local rules are carried in task packets or project AGENTS.md')
+foreach ($term in $mainRegistrationPolicyTerms) {
+  Assert-True ($routeIntent -match [regex]::Escape($term) -or (Read-Text (Join-Path $skillRoot 'references\codex-thread-protocol.md')) -match [regex]::Escape($term) -or (Read-Text (Join-Path $skillRoot 'references\main-worktree-orchestration.md')) -match [regex]::Escape($term)) "agents-init must document main-thread pre-registration and project-rule layering term: $term"
+}
+
 $codexThreadProtocol = Read-Text (Join-Path $skillRoot 'references\codex-thread-protocol.md')
 Assert-True ($codexThreadProtocol -match 'Do not fixed-interval poll' -and $codexThreadProtocol -match 'natural completion' -and $codexThreadProtocol -match 'user asks for status') 'Codex thread protocol must forbid fixed-interval worker polling and prefer natural completion/status-on-demand.'
 Assert-True ($codexThreadProtocol -match 'ingest-receipt\.ps1 -Apply -Decision accepted\|rejected' -and $codexThreadProtocol -match 'verification\.yaml' -and $codexThreadProtocol -match 'thread_registry\.yaml' -and $codexThreadProtocol -match 'does not replace UI/sample/business') 'Codex thread protocol must document explicit receipt apply behavior and its human-gate boundary.'
+Assert-True ($codexThreadProtocol -match 'pre_registration_packet' -and $codexThreadProtocol -match 'official_registration_packet' -and $codexThreadProtocol -match 'active_main is unknown until the real thread id returns') 'Codex thread protocol must document pre-registration for newly created main/branch sessions before the real thread id is known.'
 
 $multiCodexSessionDoc = Read-Text (Join-Path $skillRoot 'assets\project-template\docs\dev-os\multi-codex-session-mode.md')
 Assert-True ($multiCodexSessionDoc -match 'No fixed-interval recall' -and $multiCodexSessionDoc -match 'wait for the worker receipt') 'Project docs must tell main agents not to create 30-second recall loops for worker threads.'
@@ -129,6 +141,7 @@ Assert-True ($skillEntry -match 'Project-level Maestro Codex skills' -and $skill
 Assert-True ($skillEntry -match 'Dynamic Main / Multi-Worktree Orchestration' -and $skillEntry -match 'agents-init main' -and $skillEntry -match 'optional shortcut' -and $skillEntry -match 'state-driven, not keyword-driven') 'SKILL.md must describe dynamic main orchestration while keeping agents-init main optional and state-driven.'
 Assert-True ($skillEntry -match 'task_packet' -and $skillEntry -match 'branch_plan' -and $skillEntry -match 'completion_notice' -and $skillEntry -match 'data_packet' -and $skillEntry -match 'chairman_brief' -and $skillEntry -match 'parked_waiting_next_packet') 'SKILL.md must expose the multi-worktree orchestration packet lifecycle.'
 Assert-True ($skillEntry -match 'Context Hygiene And Evidence Exhaustion' -and $skillEntry -match 'low-frequency high-risk guardrail' -and $skillEntry -match 'rg alone is not evidence exhaustion') 'SKILL.md must keep evidence exhaustion as a bounded guardrail and forbid treating rg-only searches as full proof.'
+Assert-True ($skillEntry -match 'project-local rules' -and $skillEntry -match 'generic agents-init rules' -and $skillEntry -match 'pre_registration_packet') 'SKILL.md must separate project-local orchestration rules from generic agents-init rules and document pre-registration for new main threads.'
 
 $invokeMaestroSkill = Join-Path $skillRoot 'scripts\invoke-maestro-skill.ps1'
 Assert-True (Test-Path -LiteralPath $invokeMaestroSkill -PathType Leaf) 'agents-init must include invoke-maestro-skill.ps1 for first-class non-Claude Maestro skills.'
@@ -227,10 +240,15 @@ Assert-True ($orchTemplate -match 'integration_fit:' -and $orchTemplate -match '
 $threadRegistryTemplate = Read-Text (Join-Path $skillRoot 'assets\project-template\.workflow\thread_registry.yaml')
 Assert-True ($threadRegistryTemplate -match 'no_output' -and $threadRegistryTemplate -match 'interrupted' -and $threadRegistryTemplate -match 'restarted' -and $threadRegistryTemplate -match 'close_reason') 'thread_registry template must model no_output/interrupted/restarted worker lifecycle states with close_reason.'
 Assert-True ($threadRegistryTemplate -match 'branch_actors:' -and $threadRegistryTemplate -match 'parked_waiting_next_packet' -and $threadRegistryTemplate -match 'task_packet_path:' -and $threadRegistryTemplate -match 'branch_plan_path:' -and $threadRegistryTemplate -match 'data_packet_paths:') 'thread_registry template must model branch actors, packet paths, and parked waiting state for dynamic main orchestration.'
+Assert-True ($threadRegistryTemplate -match 'pre_registration_packet:' -and $threadRegistryTemplate -match 'official_registration_packet:' -and $threadRegistryTemplate -match 'identity_status: pending_real_thread_id') 'thread_registry template must model pre-registration and official registration for new main/branch thread identity.'
 
-foreach ($templateName in @('task_packet.yaml', 'branch_plan.yaml', 'branch_completion_notice.yaml', 'cross_project_data_packet.yaml', 'chairman_brief.yaml', 'evidence_exhaustion_check.yaml', 'evidence_digest.yaml')) {
+foreach ($templateName in @('thread_pre_registration_packet.yaml', 'thread_official_registration_packet.yaml', 'task_packet.yaml', 'branch_plan.yaml', 'branch_completion_notice.yaml', 'cross_project_data_packet.yaml', 'chairman_brief.yaml', 'evidence_exhaustion_check.yaml', 'evidence_digest.yaml')) {
   Assert-True (Test-Path -LiteralPath (Join-Path $skillRoot "assets\project-template\.workflow\templates\$templateName") -PathType Leaf) "agents-init must include $templateName for dynamic branch orchestration and context hygiene."
 }
+$preRegistrationTemplate = Read-Text (Join-Path $skillRoot 'assets\project-template\.workflow\templates\thread_pre_registration_packet.yaml')
+Assert-True ($preRegistrationTemplate -match 'active_main_is_unknown_until_real_thread_id_returns: true' -and $preRegistrationTemplate -match 'temporary_identity: pending_real_thread_id' -and $preRegistrationTemplate -match 'project_local_rules_are_not_global_skill_rules: true') 'thread_pre_registration_packet.yaml must encode pending thread identity and project-rule layering.'
+$officialRegistrationTemplate = Read-Text (Join-Path $skillRoot 'assets\project-template\.workflow\templates\thread_official_registration_packet.yaml')
+Assert-True ($officialRegistrationTemplate -match 'real_thread_id:' -and $officialRegistrationTemplate -match 'pre_registration_ref:' -and $officialRegistrationTemplate -match 'Registration does not prove task completion') 'thread_official_registration_packet.yaml must encode concrete thread id registration and proof boundaries.'
 $taskPacketTemplate = Read-Text (Join-Path $skillRoot 'assets\project-template\.workflow\templates\task_packet.yaml')
 Assert-True ($taskPacketTemplate -match 'orchestrator_authorization:' -and $taskPacketTemplate -match 'goal_slice:' -and $taskPacketTemplate -match 'must_not_decide:' -and $taskPacketTemplate -match 'expected_return_packet:') 'task_packet.yaml must encode main-agent authorization, goal slice, forbidden decisions, and expected return packet.'
 $branchPlanTemplate = Read-Text (Join-Path $skillRoot 'assets\project-template\.workflow\templates\branch_plan.yaml')
@@ -543,6 +561,10 @@ next_recommended_step:
   Assert-True ($appliedVerification -match 'APPLY-RECEIPT-001' -and $appliedVerification -match 'receipt apply fixture can be accepted' -and $appliedVerification -match 'UI acceptance') 'Receipt apply must append task id, proves, and does_not_prove to verification.yaml.'
   Assert-True ($appliedRegistry -match 'id: worker-apply' -and $appliedRegistry -match 'status: receipt_accepted' -and $appliedRegistry -match 'receipt_status: accepted_by_main' -and $appliedRegistry -match 'accepted_by_main_at:') 'Receipt apply must update the matching worker record in thread_registry.yaml.'
   Assert-True ($appliedRegistry -match 'worker-apply-receipt.yaml') 'Receipt apply must record the accepted receipt path in thread_registry.yaml.'
+  Assert-True ((($appliedRegistry -split "\r?\n").Count) -gt 8) 'Receipt apply must preserve thread_registry.yaml as multiline YAML, not collapse it into one line.'
+  Assert-True (($appliedRegistry -match '(?m)^main_thread:\s*$') -and ($appliedRegistry -match '(?m)^workers:\s*$')) 'Receipt apply must preserve top-level thread_registry.yaml sections.'
+  Assert-True ($appliedVerification -match '(?ms)proves:\s*\r?\n\s+- "receipt apply fixture can be accepted"\s*\r?\n\s+does_not_prove:' -or $appliedVerification -match '(?ms)proves:\s*\r?\n\s+- "receipt apply fixture can be accepted"\s*\r?\ndoes_not_prove:') 'Receipt apply must not let proves list swallow later YAML fields.'
+  Assert-True ($appliedVerification -match '(?ms)does_not_prove:\s*\r?\n\s+- "UI acceptance"\s*\r?\n\s+risks:' -or $appliedVerification -match '(?ms)does_not_prove:\s*\r?\n\s+- "UI acceptance"\s*\r?\nrisks:') 'Receipt apply must not let does_not_prove list swallow risks or next steps.'
 
   $initWrapperScript = Join-Path $skillRoot 'scripts\init-agents.ps1'
   $wrapperJson = & powershell -NoProfile -ExecutionPolicy Bypass -File $initWrapperScript -ProjectPath $receiptApplyRoot -Mode ingest-receipt -ReceiptPath $receiptPath -ApplyReceipt -ReceiptDecision accepted

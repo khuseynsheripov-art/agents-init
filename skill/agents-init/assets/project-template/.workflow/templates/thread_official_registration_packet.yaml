@@ -1,0 +1,35 @@
+packet_type: thread_official_registration_packet
+packet_id: ""
+created_at: ""
+
+registration:
+  real_thread_id: ""
+  parent_main_id: ""
+  role: main_agent | branch_actor | durable_worker
+  lifecycle: one_shot | continuous
+  worktree: ""
+  task_id: ""
+  registry_path: ".workflow/thread_registry.yaml"
+  status_after_registration: active | sent | running | parked_waiting_next_packet | archived
+
+pre_registration_ref:
+  packet_id: ""
+  prompt_or_artifact_ref: ""
+  accepted_by_new_session: false
+
+workflow_updates_required:
+  thread_registry: true
+  agents_init_active_thread_id: false
+  current_yaml: false
+  task_yaml: false
+  verification_yaml: false
+
+rules:
+  - "The receiving session may claim active-main or branch-actor identity only after this packet names the real thread id."
+  - "Project-local rules remain in project files and task packets; generic agents-init rules only define control-plane contracts."
+  - "The main agent remains final judge for product direction, acceptance gates, receipt ingest, and proof boundaries."
+
+does_not_prove:
+  - "Registration does not prove task completion."
+  - "Registration does not prove live multi-worktree orchestration."
+  - "Registration does not accept any completion_notice or data_packet."

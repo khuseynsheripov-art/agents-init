@@ -245,6 +245,15 @@ Use this only when recovered state and the user's goal show that one main agent 
 
 This mode is state-driven, not keyword-driven. Before creating or resuming worktrees, the main agent must recover `.workflow`, clarify the goal, identify object/module boundaries, disclose consequences, and decide whether the split is actually useful. Do not create worktrees before recovery, goal clarification, and object/module boundary analysis.
 
+Separate generic agents-init rules from project-local rules before dispatch:
+
+- generic agents-init rules: recovery, main-agent ownership, task packets, receipts, context hygiene, human gates, and proof boundaries;
+- project-local rules: domain lane names, module ids, business objects, platform rules, project role matrices, and local acceptance gates.
+
+Keep project-local rules in the project AGENTS.md, `.workflow`, task_packet, or receipt. Do not promote one project's lane names or business ids into the global skill.
+
+When creating a fresh Codex App main or durable branch session, use a two-step identity contract. First send a `pre_registration_packet` because the new thread does not yet know its real id. After the app returns the thread id, send or record an `official_registration_packet` and update `thread_registry.yaml`. Until then, the new session must treat active-main identity as pending and must not self-register a guessed id.
+
 The generic packet lifecycle is:
 
 ```text

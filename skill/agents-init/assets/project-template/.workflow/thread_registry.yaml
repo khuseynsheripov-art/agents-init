@@ -7,6 +7,9 @@ main_thread:
   role: main_agent_orchestrator
   generation: 1
   parent_main_id: ""
+  pre_registration_packet: ""
+  official_registration_packet: ""
+  identity_status: pending_real_thread_id | registered | superseded | unknown
   takeover_reason: initial | user_requested | context_compression | system_error | gate_change | handoff | unknown
   manages_worktrees: false
   active_worktree_id: ""
@@ -106,6 +109,9 @@ rules:
 worker_record_template:
   id: "<codex-thread-id-or-maestro-delegate-id>"
   parent_main_id: current
+  pre_registration_packet: ""
+  official_registration_packet: ""
+  identity_status: pending_real_thread_id | registered | archived | unknown
   source: codex_app | maestro_delegate | native_subagent | user_provided
   lifecycle: one_shot | continuous
   type: disposable_worker | durable_role_session | mvp_session | maestro_delegate | native_subagent
@@ -175,6 +181,9 @@ branch_actor_record_template:
   id: ""
   source: codex_app | worktree_main | maestro_delegate | native_subagent
   parent_main_id: current
+  pre_registration_packet: ""
+  official_registration_packet: ""
+  identity_status: pending_real_thread_id | registered | archived | unknown
   worktree_id: ""
   worktree: ""
   branch: ""

@@ -131,3 +131,15 @@ If the main agent changes:
 5. Print recovered goal, gate, evidence, open threads, next action.
 
 If the real thread id is unknown, use `current` and ask for the id only when cross-thread send/read is required.
+
+## Main Pre-Registration
+
+When creating a new Codex App main or durable branch session, the launcher may not know the real thread id until the app returns it. Use a two-step registration contract:
+
+1. Send a `pre_registration_packet` in the first prompt. It names the project path, intended role, parent main id, task/gate, allowed scope, forbidden claims, and tells the new session that `active_main is unknown until the real thread id returns`.
+2. After the thread tool returns the id, the existing main sends or records an `official_registration_packet` with the concrete thread id and updates `thread_registry.yaml`.
+3. The new session must not self-register a guessed id. If it only has the pre-registration packet, it reports `thread_id_pending` and waits for the official registration/continue packet before claiming active-main identity.
+
+This prevents the common failure where a fresh thread writes workflow state under `current`, `unknown`, or the wrong inherited id.
+
+Project-local rules are carried in task packets or project AGENTS.md. Generic agents-init rules cover recovery, proof boundaries, receipts, and orchestration contracts. Do not promote project-specific lane names, business ids, or role matrices into the global skill just because one open-project test used them.

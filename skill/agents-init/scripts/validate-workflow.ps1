@@ -195,6 +195,8 @@ $requiredFiles = @(
   '.workflow/templates/plan_pm_fde.yaml',
   '.workflow/templates/session_recovery_brief.md',
   '.workflow/templates/workflow_closeout_receipt.yaml',
+  '.workflow/templates/thread_pre_registration_packet.yaml',
+  '.workflow/templates/thread_official_registration_packet.yaml',
   '.workflow/templates/task_packet.yaml',
   '.workflow/templates/branch_plan.yaml',
   '.workflow/templates/branch_completion_notice.yaml',
@@ -239,6 +241,8 @@ $multiModelPacketPath = Join-Path $project '.workflow/templates/multi_model_cont
 $modelReviewReceiptPath = Join-Path $project '.workflow/templates/model_review_receipt.yaml'
 $designDebateReceiptPath = Join-Path $project '.workflow/templates/design_debate_receipt.yaml'
 $workflowCloseoutReceiptPath = Join-Path $project '.workflow/templates/workflow_closeout_receipt.yaml'
+$threadPreRegistrationPacketPath = Join-Path $project '.workflow/templates/thread_pre_registration_packet.yaml'
+$threadOfficialRegistrationPacketPath = Join-Path $project '.workflow/templates/thread_official_registration_packet.yaml'
 $taskPacketPath = Join-Path $project '.workflow/templates/task_packet.yaml'
 $branchPlanPath = Join-Path $project '.workflow/templates/branch_plan.yaml'
 $branchCompletionNoticePath = Join-Path $project '.workflow/templates/branch_completion_notice.yaml'
@@ -264,6 +268,8 @@ $multiModelPacket = Read-TextOrEmpty $multiModelPacketPath
 $modelReviewReceipt = Read-TextOrEmpty $modelReviewReceiptPath
 $designDebateReceipt = Read-TextOrEmpty $designDebateReceiptPath
 $workflowCloseoutReceipt = Read-TextOrEmpty $workflowCloseoutReceiptPath
+$threadPreRegistrationPacket = Read-TextOrEmpty $threadPreRegistrationPacketPath
+$threadOfficialRegistrationPacket = Read-TextOrEmpty $threadOfficialRegistrationPacketPath
 $taskPacket = Read-TextOrEmpty $taskPacketPath
 $branchPlan = Read-TextOrEmpty $branchPlanPath
 $branchCompletionNotice = Read-TextOrEmpty $branchCompletionNoticePath
@@ -376,6 +382,20 @@ if ($workflowCloseoutReceipt) {
   foreach ($field in @('branch_plan:', 'worktree_registry:', 'completion_notice:', 'parked_packet:')) {
     if ($workflowCloseoutReceipt -notmatch [regex]::Escape($field)) {
       Add-Issue -Level 'warning' -Message "workflow_closeout_receipt.yaml should include branch/worktree lifecycle head mutation field $field." -File '.workflow/templates/workflow_closeout_receipt.yaml'
+    }
+  }
+}
+if ($threadPreRegistrationPacket) {
+  foreach ($field in @('active_main_is_unknown_until_real_thread_id_returns: true', 'temporary_identity: pending_real_thread_id', 'project_local_rules_are_not_global_skill_rules: true', 'official_registration_packet')) {
+    if ($threadPreRegistrationPacket -notmatch [regex]::Escape($field)) {
+      Add-Issue -Level 'warning' -Message "thread_pre_registration_packet.yaml should include $field for safe new-thread identity handoff." -File '.workflow/templates/thread_pre_registration_packet.yaml'
+    }
+  }
+}
+if ($threadOfficialRegistrationPacket) {
+  foreach ($field in @('real_thread_id:', 'pre_registration_ref:', 'thread_registry: true', 'Registration does not prove task completion')) {
+    if ($threadOfficialRegistrationPacket -notmatch [regex]::Escape($field)) {
+      Add-Issue -Level 'warning' -Message "thread_official_registration_packet.yaml should include $field for concrete thread registration." -File '.workflow/templates/thread_official_registration_packet.yaml'
     }
   }
 }
